@@ -3,12 +3,11 @@ package com.example.bcntransit.data
 import com.example.bcntransit.api.MetroApiService
 import com.example.bcntransit.api.TramApiService
 
-import com.example.bcntransit.model.MetroLineDto
-import com.example.bcntransit.model.TramLineDto
+import com.example.bcntransit.model.LineDto
 
 class BotRepository(private val apiMetro: MetroApiService, private val apiTram: TramApiService) {
 
-    suspend fun fetchMetroLines(): List<MetroLineDto> {
+    suspend fun fetchMetroLines(): List<LineDto> {
         return try {
             apiMetro.getMetroLines()
         } catch (e: Exception) {
@@ -17,7 +16,7 @@ class BotRepository(private val apiMetro: MetroApiService, private val apiTram: 
         }
     }
 
-    suspend fun fetchTramLines(): List<TramLineDto> {
+    suspend fun fetchTramLines(): List<LineDto> {
         return try {
             apiTram.getTramLines()
         } catch (e: Exception) {

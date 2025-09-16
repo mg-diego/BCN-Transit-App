@@ -1,9 +1,9 @@
 package com.example.bcntransit.api
 
-import com.example.bcntransit.model.MetroLineDto
+import com.example.bcntransit.model.LineDto
 import retrofit2.http.GET
 
 interface MetroApiService {
     @GET("metro/lines")
-    suspend fun getMetroLines(): List<MetroLineDto>
+    suspend fun getMetroLines(): List<LineDto>
 }

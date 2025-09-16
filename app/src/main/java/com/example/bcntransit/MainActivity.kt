@@ -29,8 +29,7 @@ import coil.compose.AsyncImage
 import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.MetroLineDto
-import com.example.bcntransit.model.TramLineDto
+import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.util.UserIdentifier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,12 +70,11 @@ fun BCNTransitApp() {
     var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
 
     // Estado para metro
-    var metroLines by remember { mutableStateOf<List<MetroLineDto>>(emptyList()) }
-    var tramLines by remember { mutableStateOf<List<TramLineDto>>(emptyList()) }
+    var metroLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+    var tramLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Función para cargar líneas de metro
     fun loadMetroLines() {
         loading = true
         error = null
@@ -132,12 +130,12 @@ fun BCNTransitApp() {
                         when (currentSearchScreen) {
                             SearchOption.METRO -> {
                                 LaunchedEffect(Unit) { loadMetroLines() }
-                                MetroListScreen(metroLines, loading, error)
+                                LineListScreen(metroLines, loading, error)
                             }
                             SearchOption.BUS -> PlaceholderScreen("Bus")
                             SearchOption.TRAM -> {
                                 LaunchedEffect(Unit) { loadTramLines() }
-                                TramListScreen(tramLines, loading, error)
+                                LineListScreen(tramLines, loading, error)
                             }
                             SearchOption.RODALIES -> PlaceholderScreen("Rodalies")
                             SearchOption.FGC -> PlaceholderScreen("FGC")
@@ -280,9 +278,9 @@ fun SearchCard(
 }
 
 @Composable
-fun MetroListScreen(lines: List<MetroLineDto>, loading: Boolean, error: String?) {
+fun LineListScreen(lines: List<LineDto>, loading: Boolean, error: String?) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Metro", style = MaterialTheme.typography.headlineMedium)
+        Text("TBD", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (loading) {
@@ -294,28 +292,7 @@ fun MetroListScreen(lines: List<MetroLineDto>, loading: Boolean, error: String?)
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(lines) { line ->
-                    MetroLineCard(line)
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TramListScreen(lines: List<TramLineDto>, loading: Boolean, error: String?) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Tram", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (loading) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else if (error != null) {
-            Text("Error: $error", color = Color.Red)
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(lines) { line ->
-                    TramLineCard(line)
+                    LineCard(line)
                 }
             }
         }
@@ -323,7 +300,7 @@ fun TramListScreen(lines: List<TramLineDto>, loading: Boolean, error: String?) {
 }
 
 @Composable
-fun MetroLineCard(line: MetroLineDto) {
+fun LineCard(line: LineDto) {
     val context = LocalContext.current
     Card(
         modifier = Modifier
@@ -341,68 +318,17 @@ fun MetroLineCard(line: MetroLineDto) {
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data("https://tmb-barcelona.github.io/TMB-Icons/svg/${line.ORIGINAL_NOM_LINIA}.svg")
+                    .data("https://tmb-barcelona.github.io/TMB-Icons/svg/${line.name}.svg")
                     .decoderFactory(SvgDecoder.Factory())
                     .build(),
-                contentDescription = "#${line.ORIGINAL_NOM_LINIA}",
+                contentDescription = "#${line.name}",
                 modifier = Modifier.size(36.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
             val alertColor = if (line.has_alerts) Color.Red else Color.Green
             Column {
-                Text(line.DESC_LINIA, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Circulo de color
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(alertColor, shape = CircleShape)
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Texto de alerta
-                    Text(
-                        text = alertText,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-@Composable
-fun TramLineCard(line: TramLineDto) {
-    val context = LocalContext.current
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .clickable { /* navegar a detalle */ },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data("https://tmb-barcelona.github.io/TMB-Icons/svg/${line.original_name}.svg")
-                    .decoderFactory(SvgDecoder.Factory())
-                    .build(),
-                contentDescription = "#${line.original_name}",
-                modifier = Modifier.size(36.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
-            val alertColor = if (line.has_alerts) Color.Red else Color.Green
-            Column {
-                Text(line.original_name.toString(), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(line.description, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Circulo de color
                     Box(

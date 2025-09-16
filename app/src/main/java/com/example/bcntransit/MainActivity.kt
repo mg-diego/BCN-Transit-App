@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -69,9 +71,12 @@ fun BCNTransitApp() {
     var selectedTab by remember { mutableStateOf(BottomTab.MAP) }
     var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
 
-    // Estado para metro
+    // Lineas
     var metroLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var tramLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+    var rodaliesLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+    var fgcLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -97,6 +102,36 @@ fun BCNTransitApp() {
             try {
                 val lines = ApiClient.tramApiService.getTramLines()
                 tramLines = lines
+                loading = false
+            } catch (e: Exception) {
+                e.printStackTrace()
+                error = e.message
+                loading = false
+            }
+        }
+    }
+    fun loadRodalies() {
+        loading = true
+        error = null
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val lines = ApiClient.rodaliesApiService.getRodaliesLines()
+                rodaliesLines = lines
+                loading = false
+            } catch (e: Exception) {
+                e.printStackTrace()
+                error = e.message
+                loading = false
+            }
+        }
+    }
+    fun loadFgcLines() {
+        loading = true
+        error = null
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val lines = ApiClient.fgcApiService.getFgcLines()
+                fgcLines = lines
                 loading = false
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -137,8 +172,14 @@ fun BCNTransitApp() {
                                 LaunchedEffect(Unit) { loadTramLines() }
                                 LineListScreen(tramLines, loading, error)
                             }
-                            SearchOption.RODALIES -> PlaceholderScreen("Rodalies")
-                            SearchOption.FGC -> PlaceholderScreen("FGC")
+                            SearchOption.RODALIES -> {
+                                LaunchedEffect(Unit) { loadRodalies() }
+                                LineListScreen(rodaliesLines, loading, error)
+                            }
+                            SearchOption.FGC -> {
+                                LaunchedEffect(Unit) { loadFgcLines() }
+                                LineListScreen(fgcLines, loading, error)
+                            }
                             SearchOption.BICING -> PlaceholderScreen("Bicing")
                             null -> TODO()
                         }
@@ -212,17 +253,17 @@ fun SearchScreenModern(onNavigate: (SearchOption) -> Unit) {
         Text("Buscar", style = MaterialTheme.typography.headlineMedium)
 
         val searchItems = listOf(
-            Triple("Metro", "Ver líneas y estaciones de metro", "https://tmb-barcelona.github.io/TMB-Icons/svg/METRO.svg"),
-            Triple("Bus", "Ver líneas y paradas de bus", "https://tmb-barcelona.github.io/TMB-Icons/svg/BUS.svg"),
-            Triple("Tram", "Ver líneas y paradas de tram", "https://tmb-barcelona.github.io/TMB-Icons/svg/TRAM.svg"),
-            Triple("Rodalies", "Ver líneas y estaciones de Rodalies", "https://tmb-barcelona.github.io/TMB-Icons/svg/RODALIES.svg"),
-            Triple("FGC", "Ver líneas y estaciones de FGC", "https://tmb-barcelona.github.io/TMB-Icons/svg/FGC.svg"),
-            Triple("Bicing", "Ver estaciones de Bicing", "https://tmb-barcelona.github.io/TMB-Icons/svg/BICING_ESTACIO.svg")
+            Triple("Metro", "Ver líneas y estaciones de metro", R.drawable.metro),
+            Triple("Bus", "Ver líneas y paradas de bus", R.drawable.bus),
+            Triple("Tram", "Ver líneas y paradas de tram", R.drawable.tram),
+            Triple("Rodalies", "Ver líneas y estaciones de Rodalies", R.drawable.rodalies),
+            Triple("FGC", "Ver líneas y estaciones de FGC", R.drawable.fgc),
+            Triple("Bicing", "Ver estaciones de Bicing", R.drawable.bicing)
         )
 
         searchItems.forEachIndexed { index, item ->
             SearchCard(
-                iconUrl = item.third,
+                iconRes = item.third,
                 title = item.first,
                 description = item.second,
                 onClick = { onNavigate(SearchOption.values()[index]) }
@@ -233,8 +274,7 @@ fun SearchScreenModern(onNavigate: (SearchOption) -> Unit) {
 
 @Composable
 fun SearchCard(
-    iconUrl: String? = null,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
     title: String,
     description: String,
     onClick: () -> Unit
@@ -256,17 +296,13 @@ fun SearchCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (iconUrl != null) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(iconUrl)
-                        .decoderFactory(SvgDecoder.Factory())
-                        .build(),
-                    contentDescription = title,
-                    modifier = Modifier.size(36.dp)
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(42.dp)
                 )
-            } else if (icon != null) {
-                Icon(imageVector = icon, contentDescription = title, modifier = Modifier.size(36.dp))
             }
 
             Column {
@@ -316,13 +352,60 @@ fun LineCard(line: LineDto) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(context)
-                    .data("https://tmb-barcelona.github.io/TMB-Icons/svg/${line.name}.svg")
-                    .decoderFactory(SvgDecoder.Factory())
-                    .build(),
-                contentDescription = "#${line.name}",
-                modifier = Modifier.size(36.dp)
+            val iconRes = when (line.transport_type) {
+                "metro" -> when (line.name) {
+                    "L1"  -> R.drawable.metro_l1
+                    "L2"  -> R.drawable.metro_l2
+                    "L3"  -> R.drawable.metro_l3
+                    "L4"  -> R.drawable.metro_l4
+                    "L5"  -> R.drawable.metro_l5
+                    "L9N"  -> R.drawable.metro_l9n
+                    "L9S"  -> R.drawable.metro_l9s
+                    "L10N"  -> R.drawable.metro_l10n
+                    "L10S"  -> R.drawable.metro_l10s
+                    "L11"  -> R.drawable.metro_l11
+                    else -> R.drawable.metro
+                }
+                "rodalies" -> when(line.code) {
+                    "R1" -> R.drawable.rodalies_r1
+                    "R2" -> R.drawable.rodalies_r2
+                    "R2N" -> R.drawable.rodalies_r2n
+                    "R2S" -> R.drawable.rodalies_r2s
+                    "R3" -> R.drawable.rodalies_r3
+                    "R4" -> R.drawable.rodalies_r4
+                    "R7" -> R.drawable.rodalies_r7
+                    "R8" -> R.drawable.rodalies_r8
+                    "R11" -> R.drawable.rodalies_r11
+                    "R13" -> R.drawable.rodalies_r13
+                    "R14" -> R.drawable.rodalies_r14
+                    "R15" -> R.drawable.rodalies_r15
+                    "R16" -> R.drawable.rodalies_r16
+                    "R17" -> R.drawable.rodalies_r17
+                    "RG1" -> R.drawable.rodalies_rg1
+                    "RT1" -> R.drawable.rodalies_rt1
+                    "RT2" -> R.drawable.rodalies_rt2
+                    "RL3" -> R.drawable.rodalies_rl3
+                    "RL4" -> R.drawable.rodalies_rl4
+                    else -> R.drawable.rodalies
+                }
+                "tram" -> when(line.name) {
+                    "T1" -> R.drawable.tram_t1
+                    "T2" -> R.drawable.tram_t2
+                    "T3" -> R.drawable.tram_t3
+                    "T4" -> R.drawable.tram_t4
+                    "T5" -> R.drawable.tram_t5
+                    "T6" -> R.drawable.tram_t6
+                    else -> R.drawable.tram
+                }
+                "bus"   -> R.drawable.bus
+                "bicing"   -> R.drawable.bicing
+                else    -> R.drawable.rodalies_r2n
+            }
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(42.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"

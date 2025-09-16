@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-    private const val BASE_URL = "http://<BACKEND_IP>/api/" // <- pon tu URL
+    private const val BASE_URL = "http://<BACKEND>/api/" // <- pon tu URL
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -25,4 +25,6 @@ object ApiClient {
 
     val metroApiService: MetroApiService = retrofit.create(MetroApiService::class.java)
     val tramApiService: TramApiService = retrofit.create(TramApiService::class.java)
+    val rodaliesApiService: RodaliesApiService = retrofit.create(RodaliesApiService::class.java)
+    val fgcApiService: FgcApiService = retrofit.create(FgcApiService::class.java)
 }

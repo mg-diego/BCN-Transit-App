@@ -1,8 +1,8 @@
 package com.example.bcntransit.model
 
 data class LineDto(
-    val id: Int,
-    val code: Int,
+    val id: String,
+    val code: String,
     val name: String,
     val description: String,
     val origin: String,

@@ -1,4 +1,4 @@
-package com.example.bcntransit.ui.theme
+package com.example.bcntransit.theme
 
 import androidx.compose.ui.graphics.Color
 

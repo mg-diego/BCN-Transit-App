@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation("org.maplibre.gl:android-sdk:11.5.0")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     // Coil Compose para cargar imágenes en Compose
     implementation("io.coil-kt:coil-compose:2.6.0")
@@ -57,6 +58,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
     // Retrofit + OkHttp + Gson

@@ -11,7 +11,8 @@ data class LineDto(
     val transport_type: String,
     val name_with_emoji: String,
     val has_alerts: Boolean,
-    val alerts: List<AlertDto>
+    val alerts: List<AlertDto>,
+    val category: String? = ""
 )
 
 data class AlertDto(

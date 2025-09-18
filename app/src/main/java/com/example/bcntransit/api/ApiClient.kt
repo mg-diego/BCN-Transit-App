@@ -28,6 +28,7 @@ object ApiClient {
     val metroApiService: MetroApiService = retrofitDefault.create(MetroApiService::class.java)
     val rodaliesApiService: RodaliesApiService = retrofitDefault.create(RodaliesApiService::class.java)
     val fgcApiService: FgcApiService = retrofitDefault.create(FgcApiService::class.java)
+    val busApiService: BusApiService = retrofitDefault.create(BusApiService::class.java)
 
     // Cliente con timeout aumentado solo para TramApiService
     private val tramClient = OkHttpClient.Builder()

@@ -19,7 +19,7 @@ fun <T : StationDto> TransportStationScreen(
     loadStationsByLine: suspend (String) -> List<T>,
     loadStationRoutes: suspend (String) -> List<RouteDto>,
     onLineSelected: (LineDto) -> Unit,
-    onStationSelected: (StationDto?) -> Unit   // ← permite null para cerrar
+    onStationSelected: (StationDto?) -> Unit
 ) {
     var stations by remember { mutableStateOf<List<T>>(emptyList()) }
     var stationRoutes by remember { mutableStateOf<List<RouteDto>>(emptyList()) }

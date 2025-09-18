@@ -15,6 +15,7 @@ import com.example.bcntransit.model.StationDto
 import com.example.bcntransit.navigation.BottomNavigationBar
 import com.example.bcntransit.screens.PlaceholderScreen
 import com.example.bcntransit.screens.map.MapScreen
+import com.example.bcntransit.screens.search.BusLinesScreen
 import com.example.bcntransit.screens.search.SearchScreen
 import com.example.bcntransit.screens.search.TransportStationScreen
 
@@ -28,6 +29,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     var tramLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var rodaliesLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var fgcLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+    var busLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -44,7 +46,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
             tramLines = ApiClient.tramApiService.getTramLines()
             rodaliesLines = ApiClient.rodaliesApiService.getRodaliesLines()
             fgcLines = ApiClient.fgcApiService.getFgcLines()
-            metroStations = ApiClient.metroApiService.getMetroStations()
+            busLines = ApiClient.busApiService.getBusLines()
         } catch (e: Exception) {
             e.printStackTrace()
             error = e.message
@@ -59,6 +61,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     fun loadTramLines() = loadLines { tramLines = it }
     fun loadRodalies() = loadLines { rodaliesLines = it }
     fun loadFgcLines() = loadLines { fgcLines = it }
+    fun loadBusLines() = loadLines { busLines = it }
 
     Scaffold(
         bottomBar = {
@@ -125,7 +128,16 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it }
                             )
-                            SearchOption.BUS -> PlaceholderScreen("Bus")
+                            SearchOption.BUS -> BusLinesScreen(
+                                busLines = busLines,
+                                selectedLine = selectedLine,
+                                selectedStation = selectedStation,
+                                loadLines = { loadBusLines() },
+                                loadStationsByLine = { ApiClient.busApiService.getBusStopsByLine(it) },
+                                loadStationRoutes = { ApiClient.busApiService.getBusStopRoutes(it) },
+                                onLineSelected = { selectedLine = it },
+                                onStationSelected = { selectedStation = it }
+                            )
                             SearchOption.BICING -> PlaceholderScreen("Bicing")
                             null -> {}
                         }

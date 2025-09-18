@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.R
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
 import remainingTime
@@ -46,6 +47,7 @@ fun RoutesScreen(
                 "${routes[0].line_type}_${routes[0].line_name.lowercase().replace(" ", "_")}" // ej: "metro_l1"
             val drawableId = remember(routes[0].line_name) {
                 context.resources.getIdentifier(drawableName, "drawable", context.packageName)
+                    .takeIf { it != 0 } ?: R.drawable.bus
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -58,7 +60,7 @@ fun RoutesScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = station.name,
+                        text = (if (routes[0].line_type == "bus") "(${station.code}) - " else "") + station.name,
                         style = MaterialTheme.typography.headlineLarge
                     )
                     Text(
@@ -107,11 +109,8 @@ fun RoutesScreen(
                                     val drawableName =
                                         "${route.line_type}_${route.line_name.lowercase().replace(" ", "_")}"
                                     val drawableId = remember(route.line_name) {
-                                        context.resources.getIdentifier(
-                                            drawableName,
-                                            "drawable",
-                                            context.packageName
-                                        )
+                                        context.resources.getIdentifier(drawableName, "drawable", context.packageName)
+                                            .takeIf { it != 0 } ?: R.drawable.bus
                                     }
 
                                     Icon(

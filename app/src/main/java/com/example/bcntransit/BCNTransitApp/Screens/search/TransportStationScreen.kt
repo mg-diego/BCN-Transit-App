@@ -72,14 +72,14 @@ fun <T : StationDto> TransportStationScreen(
                     loadingRoutes = true
                     errorRoutes = null
                     try {
-                        stationRoutes = loadStationRoutes(selectedStation.code)
+                        stationRoutes = loadStationRoutes(selectedStation.code).filter { route -> route.line_code == selectedLine?.code }
                     } catch (e: Exception) {
                         e.printStackTrace()
                         errorRoutes = e.message
                     } finally {
                         loadingRoutes = false
                     }
-                    kotlinx.coroutines.delay(10_000L) // 10 segundos
+                    kotlinx.coroutines.delay(20_000L) // 10 segundos
                 }
             }
 

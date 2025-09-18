@@ -11,7 +11,8 @@ data class RouteDto(
     val destination: String,
     val next_trips: List<NextTrip>,
     val name_with_emoji: String,
-    val line_id: Int
+    val line_id: String,
+    val line_code: String
 )
 
 @Serializable

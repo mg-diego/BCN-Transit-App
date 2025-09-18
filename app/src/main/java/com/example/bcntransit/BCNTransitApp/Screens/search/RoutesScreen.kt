@@ -2,7 +2,9 @@ package com.example.bcntransit.screens.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,10 +12,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
 import remainingTime
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun RoutesScreen(
@@ -23,11 +32,13 @@ fun RoutesScreen(
     error: String?
 ) {
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(scrollState)
     ) {
         // Encabezado con icono de línea
         if (routes.isNotEmpty()) {
@@ -80,7 +91,7 @@ fun RoutesScreen(
             }
             else -> {
                 routes.forEach { route ->
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Card con overlay de loader
                     Box(
@@ -94,7 +105,7 @@ fun RoutesScreen(
                                 // Destino
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     val drawableName =
-                                        "metro_${route.line_name.lowercase().replace(" ", "_")}"
+                                        "${route.line_type}_${route.line_name.lowercase().replace(" ", "_")}"
                                     val drawableId = remember(route.line_name) {
                                         context.resources.getIdentifier(
                                             drawableName,
@@ -122,7 +133,7 @@ fun RoutesScreen(
                                 if (route.next_trips.isEmpty()) {
                                     Text("Sin próximos viajes")
                                 } else {
-                                    route.next_trips.forEachIndexed { index, trip ->
+                                    route.next_trips.take(5).forEachIndexed { index, trip ->
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
@@ -148,23 +159,31 @@ fun RoutesScreen(
                                             }
 
                                             Spacer(modifier = Modifier.width(12.dp))
-
+                                            // Cuenta atrás
+                                            ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time)
+                                            Spacer(modifier = Modifier.width(12.dp))
                                             // Info de retraso y andén
                                             Text(
                                                 text = buildString {
-                                                    if (trip.delay_in_minutes != 0) append("Retraso: ${trip.delay_in_minutes} min")
-                                                    if (trip.platform.isNotEmpty()) {
-                                                        if (isNotEmpty()) append(" • ")
-                                                        append("Andén: ${trip.platform}")
+                                                    if (trip.delay_in_minutes != 0) {
+                                                        val symbol = if(trip.delay_in_minutes > 0) "+" else ""
+                                                        append(" (${symbol}${trip.delay_in_minutes} min)")
                                                     }
                                                 },
-                                                style = MaterialTheme.typography.bodyLarge
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = if (trip.delay_in_minutes > 0) { Color.Red } else { Color.Green },
+                                                fontWeight = FontWeight.Bold
                                             )
-
                                             Spacer(modifier = Modifier.width(12.dp))
-
-                                            // Cuenta atrás
-                                            ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time)
+                                            Text(
+                                                text = buildString {
+                                                    if (!trip.platform.isNullOrEmpty()) {
+                                                        append("Vía: ${trip.platform}")
+                                                    }
+                                                },
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
                                         }
                                     }
                                 }
@@ -183,6 +202,7 @@ fun RoutesScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }
@@ -192,16 +212,39 @@ fun RoutesScreen(
 @Composable
 fun ArrivalCountdown(arrivalEpochSeconds: Long) {
     var remaining by remember { mutableStateOf(remainingTime(arrivalEpochSeconds)) }
+    var showExactTime by remember { mutableStateOf(false) }
+    var showDate by remember { mutableStateOf(false) }
 
     LaunchedEffect(arrivalEpochSeconds) {
         while (true) {
+            val nowMillis = System.currentTimeMillis()
+            val arrivalMillis = arrivalEpochSeconds * 1000
+
             remaining = remainingTime(arrivalEpochSeconds)
+            showExactTime = arrivalMillis - nowMillis > TimeUnit.HOURS.toMillis(1)
+
+            // comprobar si es el mismo día
+            val nowCal = Calendar.getInstance()
+            val arrivalCal = Calendar.getInstance().apply { timeInMillis = arrivalMillis }
+            showDate = nowCal.get(Calendar.YEAR) != arrivalCal.get(Calendar.YEAR) ||
+                    nowCal.get(Calendar.DAY_OF_YEAR) != arrivalCal.get(Calendar.DAY_OF_YEAR)
+
             kotlinx.coroutines.delay(1000)
         }
     }
 
+    val displayText = if (showExactTime) {
+        val pattern = if (showDate) "dd/MM HH:mm" else "HH:mm"
+        val formatter = remember(pattern) { SimpleDateFormat(pattern, Locale.getDefault()) }
+        formatter.format(Date(arrivalEpochSeconds * 1000)) + "h"
+    } else {
+        remaining
+    }
+
     Text(
-        text = remaining,
-        style = MaterialTheme.typography.bodyLarge
+        text = displayText,
+        style = MaterialTheme.typography.bodyLarge,
+        fontStyle = if (!showExactTime) FontStyle.Italic else FontStyle.Normal,
+        fontWeight = if (remaining == "Entrando") { FontWeight.Bold } else { FontWeight.Normal }
     )
 }

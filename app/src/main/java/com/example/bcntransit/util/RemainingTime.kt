@@ -6,7 +6,7 @@ fun remainingTime(arrivalEpochSeconds: Long): String {
     val diffMs = arrivalMs - nowMs
 
     return if (diffMs <= 40000) {
-        "Entrando"
+        "Llegando"
     } else {
         val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMs)
         val seconds = TimeUnit.MILLISECONDS.toSeconds(diffMs) % 60

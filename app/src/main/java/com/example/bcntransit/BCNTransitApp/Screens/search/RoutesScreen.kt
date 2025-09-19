@@ -61,12 +61,12 @@ fun RoutesScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = (if (routes[0].line_type == "bus") "(${station.code}) - " else "") + station.name,
+                        text = station.name,
                         style = MaterialTheme.typography.headlineMedium
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "(${station.code})  |  ",
+                            text = "(${station.code})  ·  ",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -145,6 +145,9 @@ fun RoutesScreen(
                 Text("No hay rutas disponibles.")
             }
             else -> {
+                Row {
+                    Text(text = "Llegadas", style = MaterialTheme.typography.labelSmall)
+                }
                 routes.forEach { route ->
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -212,7 +215,7 @@ fun RoutesScreen(
 
                                             Spacer(modifier = Modifier.width(12.dp))
                                             // Cuenta atrás
-                                            ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time)
+                                            ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time, index)
                                             Spacer(modifier = Modifier.width(12.dp))
                                             // Info de retraso y andén
                                             Text(
@@ -262,7 +265,7 @@ fun RoutesScreen(
 }
 
 @Composable
-fun ArrivalCountdown(arrivalEpochSeconds: Long) {
+fun ArrivalCountdown(arrivalEpochSeconds: Long, index: Int) {
     var remaining by remember { mutableStateOf(remainingTime(arrivalEpochSeconds)) }
     var showExactTime by remember { mutableStateOf(false) }
     var showDate by remember { mutableStateOf(false) }
@@ -295,8 +298,8 @@ fun ArrivalCountdown(arrivalEpochSeconds: Long) {
 
     Text(
         text = displayText,
-        style = MaterialTheme.typography.bodyLarge,
+        style = if(index == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge,
         fontStyle = if (!showExactTime) FontStyle.Italic else FontStyle.Normal,
-        fontWeight = if (remaining == "Entrando") { FontWeight.Bold } else { FontWeight.Normal }
+        fontWeight = if (remaining == "Llegando") { FontWeight.Bold } else { FontWeight.Normal }
     )
 }

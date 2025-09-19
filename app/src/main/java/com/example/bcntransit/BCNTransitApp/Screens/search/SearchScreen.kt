@@ -25,7 +25,7 @@ fun SearchScreen(onNavigate: (SearchOption) -> Unit) {
             Triple("Tram", "Ver líneas y paradas de tram", R.drawable.tram),
             Triple("Rodalies", "Ver líneas y estaciones de Rodalies", R.drawable.rodalies),
             Triple("FGC", "Ver líneas y estaciones de FGC", R.drawable.fgc),
-            Triple("Bicing", "Ver estaciones de Bicing", R.drawable.bicing)
+            Triple("Bicing", "Ver estaciones de Bicing", R.drawable.bicing_logo)
         )
 
         searchItems.forEachIndexed { index, item ->

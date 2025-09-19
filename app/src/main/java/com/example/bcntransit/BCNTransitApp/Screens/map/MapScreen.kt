@@ -1,35 +1,46 @@
 package com.example.bcntransit.screens.map
 
 import android.content.Context
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.bcntransit.model.NearbyStation
 import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
-import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
-import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
-import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 
-/**
- * Composable principal que muestra el mapa y obtiene estaciones cercanas
- */
 @Composable
 fun MapScreen(context: Context) {
     val mapView = rememberMapView(context)
     val scope = rememberCoroutineScope()
+    val appContext = LocalContext.current
 
+    var searchText by remember { mutableStateOf(TextFieldValue("")) }
+    val focusManager = LocalFocusManager.current   // 👈 para controlar el foco
+
+    // Carga inicial de mapa y estaciones
     LaunchedEffect(mapView) {
         scope.launch {
-            val userLocation = getUserLocation(context)
+            val userLocation = getUserLocation(appContext)
             userLocation?.let { latLng ->
-                // Centrar mapa en la ubicación del usuario
                 mapView.getMapAsync { map ->
                     map.cameraPosition = CameraPosition.Builder()
                         .target(latLng)
@@ -37,27 +48,62 @@ fun MapScreen(context: Context) {
                         .build()
                 }
 
-                // Obtener estaciones cercanas desde el API
-                val stations = getNearbyStations(latLng.latitude, latLng.longitude)
+                val stations = getNearbyStations(latLng.latitude, latLng.longitude, 0.5)
                 mapView.getMapAsync { map ->
                     stations.forEach { station ->
-                        val coords = LatLng(station.coordinates[0], station.coordinates[1])
-                        val marker = MarkerOptions()
-                            .position(coords)
-                            .title("${station.type} - ${station.station_name}")
-                        map.addMarker(marker)
+                        val coords = org.maplibre.android.geometry.LatLng(
+                            station.coordinates[0],
+                            station.coordinates[1]
+                        )
+                        val drawableId = appContext.resources.getIdentifier(
+                            station.type.lowercase(),
+                            "drawable",
+                            appContext.packageName
+                        )
+                        val sizePx = when (station.type.lowercase()) {
+                            "metro" -> 100
+                            "bus" -> 40
+                            "bicing" -> 60
+                            "tram" -> 80
+                            "rodalies" -> 80
+                            else -> 50
+                        }
+                        addMarkerWithDrawable(
+                            appContext,
+                            map,
+                            coords,
+                            drawableId,
+                            station.station_name,
+                            sizePx
+                        )
                     }
                 }
             }
         }
     }
 
-    AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+    // Contenedor superpuesto
+    Box(modifier = Modifier.fillMaxSize()) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+
+        OutlinedTextField(
+            value = searchText,
+            onValueChange = { searchText = it },
+            label = { Text("Buscar estación o dirección") },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                .background(Color.White.copy(alpha = 0.9f), shape = MaterialTheme.shapes.medium),
+            singleLine = true,
+            // Cuando el usuario pulse "Enter"/"Done" en el teclado
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            )
+        )
+    }
 }
 
-/**
- * Inicializa MapLibre y devuelve un MapView listo para usar
- */
 @Composable
 fun rememberMapView(context: Context): MapView {
     MapLibre.getInstance(context)
@@ -67,9 +113,7 @@ fun rememberMapView(context: Context): MapView {
             onCreate(null)
             getMapAsync { map ->
                 map.setStyle(
-                    Style.Builder().fromUri(
-                        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-                    )
+                    Style.Builder().fromUri("https://basemaps.cartocdn.com/gl/positron-gl-style/style.json")
                 ) { style ->
                     if (hasLocationPermission(context)) {
                         val locationComponent = map.locationComponent
@@ -81,7 +125,6 @@ fun rememberMapView(context: Context): MapView {
                         locationComponent.cameraMode = CameraMode.TRACKING
                         locationComponent.renderMode = RenderMode.COMPASS
                     }
-
                     map.uiSettings.apply {
                         isScrollGesturesEnabled = true
                         isZoomGesturesEnabled = true

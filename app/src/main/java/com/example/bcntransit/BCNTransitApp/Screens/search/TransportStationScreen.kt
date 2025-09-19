@@ -58,7 +58,6 @@ fun <T : StationDto> TransportStationScreen(
                 selectedLine,
                 stations,
                 loadingStations,
-                selectedLine.color,
                 errorStations,
                 onStationClick = { st -> onStationSelected(st) }
             )

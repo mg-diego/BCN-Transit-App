@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.dp
 import com.example.bcntransit.data.enums.BottomTab
 
 @Composable
-fun BottomNavigationBar(selectedTab: BottomTab, onTabSelected: (BottomTab) -> Unit) {
+fun BottomNavigationBar2(selectedTab: BottomTab, onTabSelected: (BottomTab) -> Unit) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp

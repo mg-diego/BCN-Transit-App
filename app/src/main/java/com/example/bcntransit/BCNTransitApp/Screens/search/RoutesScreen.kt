@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
+import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
 import remainingTime
@@ -44,7 +45,7 @@ fun RoutesScreen(
         // Encabezado con icono de línea
         if (routes.isNotEmpty()) {
             val drawableName =
-                "${routes[0].line_type}_${routes[0].line_name.lowercase().replace(" ", "_")}" // ej: "metro_l1"
+                "${routes[0].line_type}"
             val drawableId = remember(routes[0].line_name) {
                 context.resources.getIdentifier(drawableName, "drawable", context.packageName)
                     .takeIf { it != 0 } ?: R.drawable.bus
@@ -61,16 +62,68 @@ fun RoutesScreen(
                 Column {
                     Text(
                         text = (if (routes[0].line_type == "bus") "(${station.code}) - " else "") + station.name,
-                        style = MaterialTheme.typography.headlineLarge
+                        style = MaterialTheme.typography.headlineMedium
                     )
-                    Text(
-                        text = "Sin incidencias",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "(${station.code})  |  ",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        val alertText = if (station.has_alerts) "Incidencias" else "Servicio normal"
+                        val alertColor = if (station.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(alertColor, shape = CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(alertText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant )
+                    }
+
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // === Alertas de la estación ===
+            if (station.has_alerts && station.alerts.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
+                    station.alerts.forEach { alert ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = CustomColors.MEDIUM_RED.color)
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                // Título de la alerta en español
+                                Text(
+                                    text = alert.headerEs,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Descripción de la alerta en español
+                                if (alert.textEs.isNotEmpty()) {
+                                    Text(
+                                        text = alert.textEs,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         when {
@@ -121,8 +174,8 @@ fun RoutesScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = route.destination,
-                                        style = MaterialTheme.typography.headlineSmall
+                                        text = "→ ${route.destination}",
+                                        style = MaterialTheme.typography.titleMedium,
                                     )
                                 }
 
@@ -170,7 +223,7 @@ fun RoutesScreen(
                                                     }
                                                 },
                                                 style = MaterialTheme.typography.bodyLarge,
-                                                color = if (trip.delay_in_minutes > 0) { Color.Red } else { Color.Green },
+                                                color = if (trip.delay_in_minutes > 0) { CustomColors.RED.color } else { CustomColors.DARK_GREEN.color },
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Spacer(modifier = Modifier.width(12.dp))

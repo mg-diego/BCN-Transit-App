@@ -19,6 +19,7 @@ data class StationDto(
     val CODI_GRUP_ESTACIO: Int,
     val ORIGEN_SERVEI: String?,
     val DESTI_SERVEI: String?,
+    val DESTI_SENTIT: String?,
     val connections: List<ConnectionDto>
 )
 

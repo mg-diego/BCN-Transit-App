@@ -16,26 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.model.StationDto
-import androidx.core.graphics.toColorInt
+import com.example.bcntransit.data.enums.CustomColors
 
 @Composable
 fun StationRow(
     station: StationDto,
     isFirst: Boolean,
     isLast: Boolean,
-    lineColor: String,
+    lineColor: Color,
     onClick: () -> Unit
 ) {
     val circleSize = 20.dp
     val lineWidth = 4.dp
     val rowHeight = 70.dp
     val halfCircle = circleSize / 2
-
-    val parsedColor = Color(
-        android.graphics.Color.parseColor(
-            if (lineColor.startsWith("#")) lineColor else "#$lineColor"
-        )
-    )
 
     Row(
         modifier = Modifier
@@ -59,13 +53,13 @@ fun StationRow(
                         top = if (isFirst) halfCircle else 0.dp,
                         bottom = if (isLast) halfCircle else 0.dp
                     )
-                    .background(parsedColor)
+                    .background(lineColor)
                     .align(Alignment.Center)
             )
             Box(
                 modifier = Modifier
                     .size(circleSize)
-                    .background(parsedColor, CircleShape)
+                    .background(lineColor, CircleShape)
             )
         }
 
@@ -76,8 +70,7 @@ fun StationRow(
             modifier = Modifier.weight(1f)   // ocupa todo el espacio intermedio
         ) {
             val alertText = if (station.has_alerts) "Incidencias" else "Servicio normal"
-            val alertColor = if (station.has_alerts) Color.Red else Color.Green
-
+            val alertColor = if (station.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
             Text(
                 text = station.name_with_emoji ?: station.name,
                 style = MaterialTheme.typography.titleMedium

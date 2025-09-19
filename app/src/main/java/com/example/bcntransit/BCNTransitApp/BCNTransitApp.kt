@@ -2,6 +2,7 @@ package com.example.bcntransit
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -12,7 +13,7 @@ import com.example.bcntransit.data.enums.BottomTab
 import com.example.bcntransit.data.enums.SearchOption
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.StationDto
-import com.example.bcntransit.navigation.BottomNavigationBar
+import com.example.bcntransit.screens.BottomNavigationBar
 import com.example.bcntransit.screens.PlaceholderScreen
 import com.example.bcntransit.screens.map.MapScreen
 import com.example.bcntransit.screens.search.BusLinesScreen
@@ -65,15 +66,19 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
 
     Scaffold(
         bottomBar = {
-            BottomNavigationBar(selectedTab) { tab ->
-                selectedTab = tab
-                if (tab == BottomTab.SEARCH) {
-                    // Reseteamos selección al entrar en búsqueda
-                    currentSearchScreen = null
-                    selectedLine = null
-                    selectedStation = null
+            BottomNavigationBar(
+                modifier = Modifier.fillMaxWidth(),
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                    if (tab == BottomTab.SEARCH) {
+                        // Reseteamos selección al entrar en búsqueda
+                        currentSearchScreen = null
+                        selectedLine = null
+                        selectedStation = null
+                    }
                 }
-            }
+            )
         }
     ) { padding ->
         Box(

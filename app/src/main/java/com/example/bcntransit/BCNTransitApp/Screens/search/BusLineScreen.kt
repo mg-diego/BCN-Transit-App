@@ -1,8 +1,10 @@
 package com.example.bcntransit.screens.search
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
+import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
@@ -128,7 +131,6 @@ fun <T : StationDto> BusLinesScreen(
                 line = selectedLine,
                 stations = stations,
                 loading = loadingStations,
-                lineColor = selectedLine.color,
                 error = errorStations,
                 onStationClick = { st -> onStationSelected(st) }
             )
@@ -245,7 +247,22 @@ private fun BusLineCard(
                 modifier = Modifier.size(34.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Text(text = line.description, style = MaterialTheme.typography.bodyLarge)
+
+            val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
+            val alertColor = if (line.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+            Column {
+                Text(line.description, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(alertColor, shape = CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(alertText, style = MaterialTheme.typography.bodyMedium, color = CustomColors.GRAY.color)
+                }
+            }
+
         }
     }
 }

@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("org.maplibre.gl:android-sdk:11.5.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
 
@@ -53,6 +54,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation(libs.androidx.foundation)
     implementation(libs.material3)
+    implementation(libs.play.services.location)
 
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)

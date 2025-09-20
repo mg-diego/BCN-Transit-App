@@ -25,8 +25,7 @@ fun LineListScreen(
     lines: List<LineDto>,
     loading: Boolean,
     error: String?,
-    onLineClick: (LineDto) -> Unit,
-    modifier: Modifier = Modifier
+    onLineClick: (LineDto) -> Unit
 ) {
     val context = LocalContext.current
 

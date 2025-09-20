@@ -19,18 +19,24 @@ import com.example.bcntransit.screens.map.MapScreen
 import com.example.bcntransit.screens.search.BusLinesScreen
 import com.example.bcntransit.screens.search.SearchScreen
 import com.example.bcntransit.screens.search.TransportStationScreen
+import android.provider.Settings
+import android.util.Log
+import com.example.bcntransit.model.FavoriteDto
+import com.example.bcntransit.screens.favorites.FavoritesScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun BCNTransitApp(onDataLoaded: () -> Unit) {
     val context = LocalContext.current
 
     // Estados de datos
-    var metroLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
-    var metroStations by remember { mutableStateOf<List<StationDto>>(emptyList()) }
-    var tramLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
-    var rodaliesLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
-    var fgcLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var busLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
+
+    var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
 
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -40,14 +46,27 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     var selectedLine by remember { mutableStateOf<LineDto?>(null) }
     var selectedStation by remember { mutableStateOf<StationDto?>(null) }
 
+    val scope = rememberCoroutineScope()
+
+
     // Carga inicial de datos
     LaunchedEffect(Unit) {
         try {
-            metroLines = ApiClient.metroApiService.getMetroLines()
-            tramLines = ApiClient.tramApiService.getTramLines()
-            rodaliesLines = ApiClient.rodaliesApiService.getRodaliesLines()
-            fgcLines = ApiClient.fgcApiService.getFgcLines()
-            busLines = ApiClient.busApiService.getBusLines()
+            val androidId = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ANDROID_ID
+            )
+
+            // registrar usuario primero (si no depende del resto, también podría ir en paralelo)
+            ApiClient.userApiService.registerUser(androidId)
+
+            // lanza las peticiones en paralelo
+            coroutineScope {
+                val favoritesDeferred   = async { ApiClient.userApiService.getUserFavorites(androidId) }
+
+                // espera a que terminen todas
+                favorites = favoritesDeferred.await()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             error = e.message
@@ -57,12 +76,14 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
         }
     }
 
-    // Carga bajo demanda de cada red
-    fun loadMetroLines() = loadLines { metroLines = it }
-    fun loadTramLines() = loadLines { tramLines = it }
-    fun loadRodalies() = loadLines { rodaliesLines = it }
-    fun loadFgcLines() = loadLines { fgcLines = it }
-    fun loadBusLines() = loadLines { busLines = it }
+    fun loadBusLines() = loadLines(
+        scope,
+        fetch = { ApiClient.busApiService.getBusLines() },
+        onLoaded = { busLines = it }
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+    var loadingFavorite by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -94,50 +115,49 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                     } else {
                         when (currentSearchScreen) {
                             SearchOption.METRO -> TransportStationScreen(
-                                lines = metroLines,
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                loadLines = { loadMetroLines() },
+                                loadLines = { ApiClient.metroApiService.getMetroLines() },
                                 loadStationsByLine = { ApiClient.metroApiService.getMetroStationsByLine(it) },
                                 loadStationRoutes = { ApiClient.metroApiService.getMetroStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it }
+                                onStationSelected = { selectedStation = it },
+                                loadingFavorite = loadingFavorite
                             )
                             SearchOption.TRAM -> TransportStationScreen(
-                                lines = tramLines,
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                loadLines = { loadTramLines() },
+                                loadLines = { ApiClient.tramApiService.getTramLines() },
                                 loadStationsByLine = { ApiClient.tramApiService.getTramStopsByLine(it) },
                                 loadStationRoutes = { ApiClient.tramApiService.getTramStopRoutes(it) },
                                 onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it }
+                                onStationSelected = { selectedStation = it },
+                                loadingFavorite = loadingFavorite
                             )
                             SearchOption.RODALIES -> TransportStationScreen(
-                                lines = rodaliesLines,
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                loadLines = { loadRodalies() },
+                                loadLines = { ApiClient.rodaliesApiService.getRodaliesLines() },
                                 loadStationsByLine = { ApiClient.rodaliesApiService.getRodaliesStationsByLine(it) },
                                 loadStationRoutes = { ApiClient.rodaliesApiService.getRodaliesStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it }
+                                onStationSelected = { selectedStation = it },
+                                loadingFavorite = loadingFavorite
                             )
                             SearchOption.FGC -> TransportStationScreen(
-                                lines = fgcLines,
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                loadLines = { loadFgcLines() },
+                                loadLines = { ApiClient.fgcApiService.getFgcLines() },
                                 loadStationsByLine = { ApiClient.fgcApiService.getFgcStationsByLine(it) },
                                 loadStationRoutes = { ApiClient.fgcApiService.getFgcStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it }
+                                onStationSelected = { selectedStation = it },
+                                loadingFavorite = loadingFavorite
                             )
                             SearchOption.BUS -> BusLinesScreen(
-                                busLines = busLines,
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                loadLines = { loadBusLines() },
+                                loadLines = { ApiClient.busApiService.getBusLines() },
                                 loadStationsByLine = { ApiClient.busApiService.getBusStopsByLine(it) },
                                 loadStationRoutes = { ApiClient.busApiService.getBusStopRoutes(it) },
                                 onLineSelected = { selectedLine = it },
@@ -148,16 +168,77 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                         }
                     }
                 }
-                BottomTab.FAVORITES -> PlaceholderScreen("Favoritos")
+                BottomTab.FAVORITES -> FavoritesScreen(
+                    favorites = favorites,
+                    loading = loading,
+                    error = error,
+                    onFavoriteSelected = { fav ->
+                        loadingFavorite = true
+                        selectedTab = BottomTab.SEARCH
+                        currentSearchScreen = when (fav.type.lowercase()) {
+                            "metro" -> SearchOption.METRO
+                            "tram" -> SearchOption.TRAM
+                            "rodalies" -> SearchOption.RODALIES
+                            "fgc" -> SearchOption.FGC
+                            "bus" -> SearchOption.BUS
+                            else -> null
+                        }
+
+                        selectedStation = null
+                        selectedLine = null
+
+                        coroutineScope.launch {
+                            try {
+                                val lines = when (fav.type.lowercase()) {
+                                    "metro" -> ApiClient.metroApiService.getMetroLines()
+                                    "tram" -> ApiClient.tramApiService.getTramLines()
+                                    "rodalies" -> ApiClient.rodaliesApiService.getRodaliesLines()
+                                    "fgc" -> ApiClient.fgcApiService.getFgcLines()
+                                    "bus" -> ApiClient.busApiService.getBusLines()
+                                    else -> emptyList()
+                                }
+
+                                val favLine = lines.find { it.code == fav.line_code }
+
+                                val stations = when (fav.type.lowercase()) {
+                                    "metro" -> favLine?.code?.let { ApiClient.metroApiService.getMetroStationsByLine(it) } ?: emptyList()
+                                    "tram" -> favLine?.code?.let { ApiClient.tramApiService.getTramStopsByLine(it) } ?: emptyList()
+                                    "rodalies" -> favLine?.code?.let { ApiClient.rodaliesApiService.getRodaliesStationsByLine(it) } ?: emptyList()
+                                    "fgc" -> favLine?.code?.let { ApiClient.fgcApiService.getFgcStationsByLine(it) } ?: emptyList()
+                                    "bus" -> favLine?.code?.let { ApiClient.busApiService.getBusStopsByLine(it) } ?: emptyList()
+                                    else -> emptyList()
+                                }
+                                selectedStation = stations.find { it.code == fav.station_code }
+                                selectedLine = favLine
+
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            } finally {
+                                loadingFavorite = false
+                            }
+                        }
+                    }
+                )
                 BottomTab.USER -> PlaceholderScreen("Usuario")
             }
         }
     }
 }
 
-private fun loadLines(onLoaded: (List<LineDto>) -> Unit) {
-    try {
-    } catch (e: Exception) {
-        e.printStackTrace()
+// Firma que permite pasar la función de API concreta
+private fun loadLines(
+    scope: CoroutineScope,
+    fetch: suspend () -> List<LineDto>,
+    onLoaded: (List<LineDto>) -> Unit,
+    onError: (Throwable) -> Unit = { it.printStackTrace() }
+) {
+    scope.launch(Dispatchers.IO) {
+        try {
+            val result = fetch()
+            // Volvemos al hilo principal si vas a tocar estado de Compose
+            launch(Dispatchers.Main) { onLoaded(result) }
+        } catch (e: Exception) {
+            launch(Dispatchers.Main) { onError(e) }
+        }
     }
 }

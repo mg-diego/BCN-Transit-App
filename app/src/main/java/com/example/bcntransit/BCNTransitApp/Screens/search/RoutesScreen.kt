@@ -173,13 +173,19 @@ fun RoutesScreen(
                                         painter = painterResource(drawableId),
                                         contentDescription = null,
                                         tint = Color.Unspecified,
-                                        modifier = Modifier.size(30.dp)
+                                        modifier = Modifier.size(38.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "→ ${route.destination}",
-                                        style = MaterialTheme.typography.titleMedium,
-                                    )
+                                    Column {
+                                        Text(
+                                            text = "Dirección",
+                                            style = MaterialTheme.typography.labelSmall,
+                                        )
+                                        Text(
+                                            text = if(drawableId == R.drawable.bus) "${route.line_name} - ${route.destination}" else "${route.destination}",
+                                            style = MaterialTheme.typography.titleLarge,
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(12.dp))

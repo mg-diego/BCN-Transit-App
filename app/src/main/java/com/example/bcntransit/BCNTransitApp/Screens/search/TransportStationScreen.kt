@@ -23,8 +23,6 @@ fun <T : StationDto> TransportStationScreen(
     onStationSelected: (StationDto?) -> Unit,
     loadingFavorite: Boolean = false
 ) {
-    Log.d("TransportStationScreen", "Composable se está componiendo: selectedLine=$selectedLine, selectedStation=$selectedStation")
-
     var lines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var loadingLines by remember { mutableStateOf(true) }
 

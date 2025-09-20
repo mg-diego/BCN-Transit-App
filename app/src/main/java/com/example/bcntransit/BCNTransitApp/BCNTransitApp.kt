@@ -20,11 +20,8 @@ import com.example.bcntransit.screens.search.BusLinesScreen
 import com.example.bcntransit.screens.search.SearchScreen
 import com.example.bcntransit.screens.search.TransportStationScreen
 import android.provider.Settings
-import android.util.Log
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.screens.favorites.FavoritesScreen
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -34,8 +31,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     val context = LocalContext.current
 
     // Estados de datos
-    var busLines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
-
     var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
 
     var loading by remember { mutableStateOf(true) }
@@ -45,9 +40,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
     var selectedLine by remember { mutableStateOf<LineDto?>(null) }
     var selectedStation by remember { mutableStateOf<StationDto?>(null) }
-
-    val scope = rememberCoroutineScope()
-
 
     // Carga inicial de datos
     LaunchedEffect(Unit) {
@@ -63,8 +55,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
             // lanza las peticiones en paralelo
             coroutineScope {
                 val favoritesDeferred   = async { ApiClient.userApiService.getUserFavorites(androidId) }
-
-                // espera a que terminen todas
                 favorites = favoritesDeferred.await()
             }
         } catch (e: Exception) {
@@ -75,12 +65,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
             onDataLoaded()
         }
     }
-
-    fun loadBusLines() = loadLines(
-        scope,
-        fetch = { ApiClient.busApiService.getBusLines() },
-        onLoaded = { busLines = it }
-    )
 
     val coroutineScope = rememberCoroutineScope()
     var loadingFavorite by remember { mutableStateOf(false) }
@@ -221,24 +205,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                 )
                 BottomTab.USER -> PlaceholderScreen("Usuario")
             }
-        }
-    }
-}
-
-// Firma que permite pasar la función de API concreta
-private fun loadLines(
-    scope: CoroutineScope,
-    fetch: suspend () -> List<LineDto>,
-    onLoaded: (List<LineDto>) -> Unit,
-    onError: (Throwable) -> Unit = { it.printStackTrace() }
-) {
-    scope.launch(Dispatchers.IO) {
-        try {
-            val result = fetch()
-            // Volvemos al hilo principal si vas a tocar estado de Compose
-            launch(Dispatchers.Main) { onLoaded(result) }
-        } catch (e: Exception) {
-            launch(Dispatchers.Main) { onError(e) }
         }
     }
 }

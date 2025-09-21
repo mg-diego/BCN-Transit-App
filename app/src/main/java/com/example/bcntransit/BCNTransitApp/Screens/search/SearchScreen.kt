@@ -33,7 +33,7 @@ fun SearchScreen(onNavigate: (SearchOption) -> Unit) {
                 iconRes = item.third,
                 title = item.first,
                 description = item.second,
-                onClick = { onNavigate(SearchOption.values()[index]) }
+                onClick = { onNavigate(SearchOption.entries[index]) }
             )
         }
     }

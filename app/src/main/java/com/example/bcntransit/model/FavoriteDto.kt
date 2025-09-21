@@ -1,14 +1,29 @@
 package com.example.bcntransit.model
 
 data class FavoriteDto(
-    val user_id: String,             // sigue siendo String
+    val USER_ID: String,
+    val TYPE: String,
+    val STATION_CODE: String,
+    val STATION_NAME: String,
+    val STATION_GROUP_CODE: String?,
+    val LINE_NAME: String?,
+    val LINE_NAME_WITH_EMOJI: String?,
+    val LINE_CODE: String,
+    val LATITUDE: Long,
+    val LONGITUDE: Long
+)
+
+data class FavoriteItem(
+    val STATION_CODE: String,
+    val STATION_NAME: String,
+    val STATION_GROUP_CODE: String,
+    val LINE_NAME: String,
+    val LINE_NAME_WITH_EMOJI: String,
+    val LINE_CODE: String,
+    val coordinates: List<Double>
+)
+
+data class FavoritePostRequest(
     val type: String,
-    val station_code: String,        // puede ser número o texto ("LH")
-    val station_name: String,
-    val codi_group_estacio: String?, // puede venir como "" -> nullable
-    val line_name: String?,
-    val line_name_with_emoji: String?,
-    val line_code: String,           // puede ser int o string ("R1", "L8")
-    val latitude: Long,
-    val longitude: Long
+    val item: FavoriteItem
 )

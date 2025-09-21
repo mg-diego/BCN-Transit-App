@@ -31,37 +31,24 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     val context = LocalContext.current
 
     // Estados de datos
-    var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
-
-    var loading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
 
     var selectedTab by remember { mutableStateOf(BottomTab.MAP) }
     var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
     var selectedLine by remember { mutableStateOf<LineDto?>(null) }
     var selectedStation by remember { mutableStateOf<StationDto?>(null) }
+    val androidId = Settings.Secure.getString(
+        context.contentResolver,
+        Settings.Secure.ANDROID_ID
+    )
 
     // Carga inicial de datos
     LaunchedEffect(Unit) {
         try {
-            val androidId = Settings.Secure.getString(
-                context.contentResolver,
-                Settings.Secure.ANDROID_ID
-            )
-
             // registrar usuario primero (si no depende del resto, también podría ir en paralelo)
             ApiClient.userApiService.registerUser(androidId)
-
-            // lanza las peticiones en paralelo
-            coroutineScope {
-                val favoritesDeferred   = async { ApiClient.userApiService.getUserFavorites(androidId) }
-                favorites = favoritesDeferred.await()
-            }
         } catch (e: Exception) {
             e.printStackTrace()
-            error = e.message
         } finally {
-            loading = false
             onDataLoaded()
         }
     }
@@ -153,13 +140,11 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                     }
                 }
                 BottomTab.FAVORITES -> FavoritesScreen(
-                    favorites = favorites,
-                    loading = loading,
-                    error = error,
+                    currentUserId = androidId,
                     onFavoriteSelected = { fav ->
                         loadingFavorite = true
                         selectedTab = BottomTab.SEARCH
-                        currentSearchScreen = when (fav.type.lowercase()) {
+                        currentSearchScreen = when (fav.TYPE.lowercase()) {
                             "metro" -> SearchOption.METRO
                             "tram" -> SearchOption.TRAM
                             "rodalies" -> SearchOption.RODALIES
@@ -173,7 +158,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
 
                         coroutineScope.launch {
                             try {
-                                val lines = when (fav.type.lowercase()) {
+                                val lines = when (fav.TYPE.lowercase()) {
                                     "metro" -> ApiClient.metroApiService.getMetroLines()
                                     "tram" -> ApiClient.tramApiService.getTramLines()
                                     "rodalies" -> ApiClient.rodaliesApiService.getRodaliesLines()
@@ -182,9 +167,9 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                     else -> emptyList()
                                 }
 
-                                val favLine = lines.find { it.code == fav.line_code }
+                                val favLine = lines.find { it.code == fav.LINE_CODE }
 
-                                val stations = when (fav.type.lowercase()) {
+                                val stations = when (fav.TYPE.lowercase()) {
                                     "metro" -> favLine?.code?.let { ApiClient.metroApiService.getMetroStationsByLine(it) } ?: emptyList()
                                     "tram" -> favLine?.code?.let { ApiClient.tramApiService.getTramStopsByLine(it) } ?: emptyList()
                                     "rodalies" -> favLine?.code?.let { ApiClient.rodaliesApiService.getRodaliesStationsByLine(it) } ?: emptyList()
@@ -192,7 +177,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                     "bus" -> favLine?.code?.let { ApiClient.busApiService.getBusStopsByLine(it) } ?: emptyList()
                                     else -> emptyList()
                                 }
-                                selectedStation = stations.find { it.code == fav.station_code }
+                                selectedStation = stations.find { it.code == fav.STATION_CODE }
                                 selectedLine = favLine
 
                             } catch (e: Exception) {

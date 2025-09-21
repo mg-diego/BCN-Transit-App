@@ -1,15 +1,20 @@
 package com.example.bcntransit.screens.favorites
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,20 +22,37 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.R
 import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.model.FavoriteDto
+import com.example.bcntransit.api.ApiClient
+import kotlinx.coroutines.launch
 
 @Composable
 fun FavoritesScreen(
-    favorites: List<FavoriteDto>,
-    loading: Boolean,
-    error: String?,
+    currentUserId: String,
     onFavoriteSelected: (FavoriteDto) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    val coroutineScope = rememberCoroutineScope()
+    var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-        // Cabecera con icono y sombra inferior
+    LaunchedEffect(currentUserId) {
+        loading = true
+        error = null
+        try {
+            favorites = ApiClient.userApiService.getUserFavorites(currentUserId)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            error = e.message
+        } finally {
+            loading = false
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Cabecera
         Box(Modifier.fillMaxWidth()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -41,7 +63,7 @@ fun FavoritesScreen(
                     .padding(8.dp)
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.metro), // tu drawable de favoritos
+                    painter = painterResource(R.drawable.metro),
                     contentDescription = null,
                     tint = Color.Unspecified,
                     modifier = Modifier.size(42.dp)
@@ -70,9 +92,7 @@ fun FavoritesScreen(
             loading -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            ) { CircularProgressIndicator() }
 
             error != null -> Text(
                 text = "Error: $error",
@@ -81,14 +101,40 @@ fun FavoritesScreen(
             )
 
             else -> LazyColumn(
-                modifier = Modifier.padding(
-                    top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp
-                ),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(favorites) { fav ->
-                    FavoriteCard(fav) {
-                        onFavoriteSelected(fav)
+                itemsIndexed(favorites, key = { _, fav -> fav.STATION_CODE }) { index, fav ->
+                    var visible by remember { mutableStateOf(true) }
+
+                    AnimatedVisibility(
+                        visible = visible,
+                        exit = fadeOut(animationSpec = tween(300)) + slideOutHorizontally(
+                            targetOffsetX = { it }, animationSpec = tween(300)
+                        )
+                    ) {
+                        FavoriteCard(
+                            fav,
+                            onClick = { onFavoriteSelected(fav) },
+                            onDelete = {
+                                // Animar primero
+                                visible = false
+                                // Esperar un poco para la animación
+                                coroutineScope.launch {
+                                    kotlinx.coroutines.delay(300)
+                                    try {
+                                        ApiClient.userApiService.deleteUserFavorite(
+                                            currentUserId,
+                                            type = fav.TYPE,
+                                            itemId = fav.STATION_CODE
+                                        )
+                                        favorites = ApiClient.userApiService.getUserFavorites(currentUserId)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -97,7 +143,11 @@ fun FavoritesScreen(
 }
 
 @Composable
-fun FavoriteCard(fav: FavoriteDto, onClick: () -> Unit ) {
+fun FavoriteCard(
+    fav: FavoriteDto,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -114,10 +164,11 @@ fun FavoriteCard(fav: FavoriteDto, onClick: () -> Unit ) {
         ) {
             val context = LocalContext.current
             val drawableName =
-                "${fav.type}_${fav.line_name?.lowercase()?.replace(" ", "_")}"
-            val drawableId = remember(fav.line_name) {
+                "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
+            val drawableId = remember(fav.LINE_NAME) {
                 context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                    .takeIf { it != 0 } ?: context.resources.getIdentifier(fav.type, "drawable", context.packageName)
+                    .takeIf { it != 0 }
+                    ?: context.resources.getIdentifier(fav.TYPE, "drawable", context.packageName)
             }
 
             Icon(
@@ -128,10 +179,29 @@ fun FavoriteCard(fav: FavoriteDto, onClick: () -> Unit ) {
             )
 
             Spacer(modifier = Modifier.width(16.dp))
+
             Column {
-                Text(fav.station_name, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("${fav.type.uppercase()} (${fav.station_code})", style = MaterialTheme.typography.bodyMedium, color = CustomColors.GRAY.color)
+                Text(
+                    fav.STATION_NAME,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "${fav.TYPE.uppercase()} (${fav.STATION_CODE})",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CustomColors.GRAY.color
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Column {
+                IconButton(onClick = { onDelete() }) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Eliminar favorito",
+                        tint = CustomColors.RED.color
+                    )
                 }
             }
         }

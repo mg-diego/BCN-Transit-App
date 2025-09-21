@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.filled.Star       // estrella llena
+import androidx.compose.material.icons.outlined.Star     // estrella vacía
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -75,7 +77,7 @@ fun StationRow(
                 text = station.name_with_emoji ?: station.name,
                 style = MaterialTheme.typography.titleMedium
             )
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -89,9 +91,9 @@ fun StationRow(
         // Este IconButton quedará pegado al borde derecho
         IconButton(onClick = { /* TODO: marcar favorito */ }) {
             Icon(
-                imageVector = Icons.Outlined.Star,
+                imageVector = Icons.Outlined.StarBorder,
                 contentDescription = "Favorito",
-                tint = Color.Red
+                tint = CustomColors.RED.color
             )
         }
     }

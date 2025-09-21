@@ -17,6 +17,7 @@ interface UserApiService {
     @GET("users/{userId}/favorites")
     suspend fun getUserFavorites(@Path("userId") userId: String): List<FavoriteDto>
 
+
     @POST("users/{userId}/favorites")
     suspend fun addUserFavorite(
         @Path("userId") userId: String,
@@ -28,5 +29,12 @@ interface UserApiService {
         @Path("userId") userId: String,
         @Query("type") type: String,
         @Query("item_id") itemId: String
-    ): Unit
+    ): Boolean
+
+    @GET("users/{userId}/favorites/exists")
+    suspend fun userHasFavorite(
+        @Path("userId") userId: String,
+        @Query("type") type: String,
+        @Query("item_id") itemId: String
+    ): Boolean
 }

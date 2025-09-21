@@ -29,7 +29,7 @@ object ApiClient {
     val rodaliesApiService: RodaliesApiService = retrofitDefault.create(RodaliesApiService::class.java)
     val fgcApiService: FgcApiService = retrofitDefault.create(FgcApiService::class.java)
     val busApiService: BusApiService = retrofitDefault.create(BusApiService::class.java)
-    val nearApiService : NearApiService = retrofitDefault.create(NearApiService::class.java)
+    val nearApiService : ResultsApiService = retrofitDefault.create(ResultsApiService::class.java)
 
     val userApiService : UserApiService = retrofitDefault.create(UserApiService::class.java)
 

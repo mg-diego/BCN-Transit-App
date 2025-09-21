@@ -20,10 +20,7 @@ import com.example.bcntransit.screens.search.BusLinesScreen
 import com.example.bcntransit.screens.search.SearchScreen
 import com.example.bcntransit.screens.search.TransportStationScreen
 import android.provider.Settings
-import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.screens.favorites.FavoritesScreen
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -93,7 +90,8 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 loadStationRoutes = { ApiClient.metroApiService.getMetroStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it },
-                                loadingFavorite = loadingFavorite
+                                loadingFavorite = loadingFavorite,
+                                currentUserId = androidId
                             )
                             SearchOption.TRAM -> TransportStationScreen(
                                 selectedLine = selectedLine,
@@ -103,7 +101,8 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 loadStationRoutes = { ApiClient.tramApiService.getTramStopRoutes(it) },
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it },
-                                loadingFavorite = loadingFavorite
+                                loadingFavorite = loadingFavorite,
+                                currentUserId = androidId
                             )
                             SearchOption.RODALIES -> TransportStationScreen(
                                 selectedLine = selectedLine,
@@ -113,7 +112,8 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 loadStationRoutes = { ApiClient.rodaliesApiService.getRodaliesStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it },
-                                loadingFavorite = loadingFavorite
+                                loadingFavorite = loadingFavorite,
+                                currentUserId = androidId
                             )
                             SearchOption.FGC -> TransportStationScreen(
                                 selectedLine = selectedLine,
@@ -123,7 +123,8 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 loadStationRoutes = { ApiClient.fgcApiService.getFgcStationRoutes(it) },
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it },
-                                loadingFavorite = loadingFavorite
+                                loadingFavorite = loadingFavorite,
+                                currentUserId = androidId
                             )
                             SearchOption.BUS -> BusLinesScreen(
                                 selectedLine = selectedLine,
@@ -132,7 +133,8 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 loadStationsByLine = { ApiClient.busApiService.getBusStopsByLine(it) },
                                 loadStationRoutes = { ApiClient.busApiService.getBusStopRoutes(it) },
                                 onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it }
+                                onStationSelected = { selectedStation = it },
+                                currentUserId = androidId
                             )
                             SearchOption.BICING -> PlaceholderScreen("Bicing")
                             null -> {}

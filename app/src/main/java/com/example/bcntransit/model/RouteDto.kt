@@ -1,8 +1,6 @@
 package com.example.bcntransit.model
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 data class RouteDto(
     val route_id: String,
     val line_type: String,
@@ -15,7 +13,6 @@ data class RouteDto(
     val line_code: String
 )
 
-@Serializable
 data class NextTrip(
     val id: String,
     val arrival_time: Long,

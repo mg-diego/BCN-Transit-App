@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.model.NearbyStation
@@ -12,6 +14,8 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
 import org.maplibre.android.annotations.Icon
 import org.maplibre.android.annotations.IconFactory
+import org.maplibre.android.annotations.Marker
+import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 
@@ -70,11 +74,31 @@ fun addMarkerWithDrawable(
     drawableId: Int,
     title: String,
     sizePx: Int = 80
-) {
+): Marker? {
     val icon = getMapIcon(context, drawableId, sizePx)
-    val marker = org.maplibre.android.annotations.MarkerOptions()
+    val marker = map.addMarker(MarkerOptions()
         .position(position)
         .title(title)
-        .icon(icon)
-    map.addMarker(marker)
+        .icon(icon))
+    return marker
+}
+
+fun getMarkerIcon(context: Context, drawableRes: Int, sizePx: Int = 80): Icon {
+    // Cargar el drawable
+    val drawable: Drawable = ContextCompat.getDrawable(context, drawableRes)
+        ?: throw IllegalArgumentException("Drawable not found")
+
+    // Convertir a Bitmap
+    val bitmap: Bitmap = if (drawable is BitmapDrawable) {
+        drawable.bitmap
+    } else {
+        val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        bmp
+    }
+
+    // Crear el Icon para MapLibre
+    return IconFactory.getInstance(context).fromBitmap(bitmap)
 }

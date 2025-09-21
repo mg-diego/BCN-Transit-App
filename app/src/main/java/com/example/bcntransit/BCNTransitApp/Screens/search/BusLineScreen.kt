@@ -33,7 +33,8 @@ fun <T : StationDto> BusLinesScreen(
     loadStationRoutes: suspend (String) -> List<RouteDto>,
     onLineSelected: (LineDto) -> Unit,
     onStationSelected: (StationDto?) -> Unit,
-    loadingFavorite: Boolean = false
+    loadingFavorite: Boolean = false,
+    currentUserId: String
 ) {
     if (loadingFavorite) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -184,7 +185,8 @@ fun <T : StationDto> BusLinesScreen(
                 stations = stations,
                 loading = loadingStations,
                 error = errorStations,
-                onStationClick = { st -> onStationSelected(st) }
+                onStationClick = { st -> onStationSelected(st) },
+                currentUserId = currentUserId
             )
         }
 

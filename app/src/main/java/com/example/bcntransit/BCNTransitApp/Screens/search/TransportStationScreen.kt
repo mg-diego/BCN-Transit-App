@@ -21,7 +21,8 @@ fun <T : StationDto> TransportStationScreen(
     loadStationRoutes: suspend (String) -> List<RouteDto>,
     onLineSelected: (LineDto) -> Unit,
     onStationSelected: (StationDto?) -> Unit,
-    loadingFavorite: Boolean = false
+    loadingFavorite: Boolean = false,
+    currentUserId: String
 ) {
     var lines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var loadingLines by remember { mutableStateOf(true) }
@@ -145,6 +146,7 @@ fun <T : StationDto> TransportStationScreen(
                 stations,
                 loadingStations,
                 errorStations,
+                currentUserId = currentUserId,
                 onStationClick = { st -> onStationSelected(st) }
             )
         }

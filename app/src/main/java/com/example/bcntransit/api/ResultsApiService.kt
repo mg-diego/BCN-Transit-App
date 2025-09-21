@@ -4,7 +4,7 @@ import com.example.bcntransit.model.NearbyStation
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface NearApiService {
+interface ResultsApiService {
 
     /**
      * Obtiene estaciones cercanas a una ubicación dada.
@@ -12,10 +12,15 @@ interface NearApiService {
      * @param lon Longitud del usuario
      * @param radius Radio de búsqueda en km (opcional, default 1km)
      */
-    @GET("near")
+    @GET("results/near")
     suspend fun getNearbyStations(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
         @Query("radius") radiusKm: Double = 0.5
+    ): List<NearbyStation>
+
+    @GET("results/search")
+    suspend fun getStationsByName(
+        @Query("name") name: String
     ): List<NearbyStation>
 }

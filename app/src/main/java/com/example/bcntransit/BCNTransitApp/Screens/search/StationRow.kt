@@ -5,18 +5,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star       // estrella llena
-import androidx.compose.material.icons.outlined.Star     // estrella vacía
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.model.StationDto
 import com.example.bcntransit.data.enums.CustomColors
 
@@ -26,12 +31,27 @@ fun StationRow(
     isFirst: Boolean,
     isLast: Boolean,
     lineColor: Color,
+    lineType: String,
+    currentUserId: String,
     onClick: () -> Unit
 ) {
     val circleSize = 20.dp
     val lineWidth = 4.dp
     val rowHeight = 70.dp
     val halfCircle = circleSize / 2
+
+    var isFavorite by remember { mutableStateOf(false) }
+    LaunchedEffect(station.code, currentUserId) {
+        try {
+            isFavorite = ApiClient.userApiService.userHasFavorite(
+                userId = currentUserId,
+                type = lineType,
+                itemId = station.code
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -91,7 +111,7 @@ fun StationRow(
         // Este IconButton quedará pegado al borde derecho
         IconButton(onClick = { /* TODO: marcar favorito */ }) {
             Icon(
-                imageVector = Icons.Outlined.StarBorder,
+                imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                 contentDescription = "Favorito",
                 tint = CustomColors.RED.color
             )

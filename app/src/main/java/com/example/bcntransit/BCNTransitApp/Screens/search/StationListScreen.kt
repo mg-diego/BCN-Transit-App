@@ -27,6 +27,7 @@ fun StationListScreen(
     stations: List<StationDto>,
     loading: Boolean,
     error: String? = null,
+    currentUserId: String,
     onStationClick: (StationDto) -> Unit
 ) {
     val parsedColor = Color(
@@ -134,6 +135,8 @@ fun StationListScreen(
                         isFirst = index == 0,
                         isLast = index == stations.lastIndex,
                         lineColor = parsedColor,
+                        lineType = line.transport_type,
+                        currentUserId = currentUserId,
                         onClick = { onStationClick(station) }
                     )
                 }

@@ -18,4 +18,7 @@ interface FgcApiService {
 
     @GET("fgc/stations/{stationId}/routes")
     suspend fun getFgcStationRoutes(@Path("stationId") stationId: String): List<RouteDto>
+
+    @GET("fgc/stations/{stationId}")
+    suspend fun getFgcStation(@Path("stationId") stationId: String): StationDto
 }

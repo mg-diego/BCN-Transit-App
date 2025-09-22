@@ -18,4 +18,7 @@ interface BusApiService {
 
     @GET("bus/stops/{stopId}/routes")
     suspend fun getBusStopRoutes(@Path("stopId") stopId: String): List<RouteDto>
+
+    @GET("bus/stops/{stationId}")
+    suspend fun getBusStop(@Path("stationId") stationId: String): StationDto
 }

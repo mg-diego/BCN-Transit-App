@@ -18,4 +18,7 @@ interface MetroApiService {
 
     @GET("metro/stations/{stationId}/routes")
     suspend fun getMetroStationRoutes(@Path("stationId") stationId: String): List<RouteDto>
+
+    @GET("metro/stations/{stationId}")
+    suspend fun getMetroStation(@Path("stationId") stationId: String): StationDto
 }

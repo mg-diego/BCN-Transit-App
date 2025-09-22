@@ -10,12 +10,15 @@ interface TramApiService {
     @GET("tram/lines")
     suspend fun getTramLines(): List<LineDto>
 
-    @GET("tram/stations")
+    @GET("tram/stops")
     suspend fun getTramStops(): List<StationDto>
 
-    @GET("tram/lines/{lineId}/stations")
+    @GET("tram/lines/{lineId}/stops")
     suspend fun getTramStopsByLine(@Path("lineId") lineId: String): List<StationDto>
 
-    @GET("tram/stations/{stationId}/routes")
+    @GET("tram/stops/{stationId}/routes")
     suspend fun getTramStopRoutes(@Path("stationId") stationId: String): List<RouteDto>
+
+    @GET("tram/stops/{stationId}")
+    suspend fun getTramStation(@Path("stationId") stationId: String): StationDto
 }

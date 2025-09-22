@@ -18,4 +18,7 @@ interface RodaliesApiService {
 
     @GET("rodalies/stations/{stationId}/routes")
     suspend fun getRodaliesStationRoutes(@Path("stationId") stationId: String): List<RouteDto>
+
+    @GET("rodalies/stations/{stationId}")
+    suspend fun getRodaliesStation(@Path("stationId") stationId: String): StationDto
 }

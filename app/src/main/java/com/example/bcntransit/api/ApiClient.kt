@@ -29,8 +29,7 @@ object ApiClient {
     val rodaliesApiService: RodaliesApiService = retrofitDefault.create(RodaliesApiService::class.java)
     val fgcApiService: FgcApiService = retrofitDefault.create(FgcApiService::class.java)
     val busApiService: BusApiService = retrofitDefault.create(BusApiService::class.java)
-    val nearApiService : ResultsApiService = retrofitDefault.create(ResultsApiService::class.java)
-
+    val bicingApiService: BicingApiService = retrofitDefault.create(BicingApiService::class.java)
     val userApiService : UserApiService = retrofitDefault.create(UserApiService::class.java)
 
     // Cliente con timeout aumentado solo para TramApiService
@@ -41,11 +40,12 @@ object ApiClient {
         .writeTimeout(60, TimeUnit.SECONDS)    // tiempo de escritura
         .build()
 
-    private val retrofitTram = Retrofit.Builder()
+    private val retrofitLongTimeout = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .client(tramClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val tramApiService: TramApiService = retrofitTram.create(TramApiService::class.java)
+    val tramApiService: TramApiService = retrofitLongTimeout.create(TramApiService::class.java)
+    val nearApiService : ResultsApiService = retrofitLongTimeout.create(ResultsApiService::class.java)
 }

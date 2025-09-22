@@ -102,3 +102,10 @@ fun getMarkerIcon(context: Context, drawableRes: Int, sizePx: Int = 80): Icon {
     // Crear el Icon para MapLibre
     return IconFactory.getInstance(context).fromBitmap(bitmap)
 }
+
+// Cantidad de desplazamiento en grados
+// Positivo en latitude → mueve hacia el norte
+// Positivo en longitude → mueve hacia el este
+fun LatLng.withOffset(latOffset: Double = 0.0, lngOffset: Double = 0.0): LatLng {
+    return LatLng(this.latitude + latOffset, this.longitude + lngOffset)
+}

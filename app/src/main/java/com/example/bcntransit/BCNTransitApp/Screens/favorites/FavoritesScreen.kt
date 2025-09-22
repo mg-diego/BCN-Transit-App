@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +19,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.R
 import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.api.ApiClient
@@ -222,7 +222,9 @@ fun FavoriteCard(
             Spacer(modifier = Modifier.weight(1f))
 
             Column {
-                IconButton(onClick = { onDelete() }) {
+                IconButton(onClick = {
+                    onDelete()
+                }) {
                     Icon(
                         imageVector = Icons.Filled.Star,
                         contentDescription = "Eliminar favorito",

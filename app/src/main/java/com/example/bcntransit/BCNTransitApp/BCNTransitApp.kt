@@ -28,7 +28,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     val context = LocalContext.current
 
     // Estados de datos
-
     var selectedTab by remember { mutableStateOf(BottomTab.MAP) }
     var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
     var selectedLine by remember { mutableStateOf<LineDto?>(null) }
@@ -41,12 +40,11 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
     // Carga inicial de datos
     LaunchedEffect(Unit) {
         try {
+            onDataLoaded()
             // registrar usuario primero (si no depende del resto, también podría ir en paralelo)
             ApiClient.userApiService.registerUser(androidId)
         } catch (e: Exception) {
             e.printStackTrace()
-        } finally {
-            onDataLoaded()
         }
     }
 

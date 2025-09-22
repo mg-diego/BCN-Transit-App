@@ -38,14 +38,13 @@ import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.location.LocationComponentActivationOptions
 import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
-import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(context: Context) {
-    val (mapView, mapboxMap) = rememberMapView(context)
+    val mapView = rememberMapView(context)
     val appContext = LocalContext.current
     val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
@@ -60,24 +59,34 @@ fun MapScreen(context: Context) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     var selectedNearbyStation by remember { mutableStateOf<NearbyStation?>(null) }
     var selectedStation by remember { mutableStateOf<StationDto?>(null) }
+    var selectedStationConnections by remember { mutableStateOf<List<LineDto>?>(null) }
     var selectedBicingStation by remember { mutableStateOf<BicingStation?>(null) }
 
     // Estado de marcadores
     val markerToStation = remember { mutableStateMapOf<Marker, NearbyStation>() }
     var lastSelectedMarker by remember { mutableStateOf<Marker?>(null) }
 
+    var isLoadingNearbyStations by remember { mutableStateOf(false) }
     /**
      * Cuando cambia la estación seleccionada, pedimos detalles
      */
     LaunchedEffect(selectedNearbyStation) {
         selectedNearbyStation?.let { nearby ->
             try {
-                if (selectedNearbyStation!!.type == "bus") { selectedStation = ApiClient.busApiService.getBusStop(nearby.station_code) }
-                else if (selectedNearbyStation!!.type == "metro") { selectedStation = ApiClient.metroApiService.getMetroStation(nearby.station_code) }
-                else if (selectedNearbyStation!!.type == "rodalies") { selectedStation = ApiClient.rodaliesApiService.getRodaliesStation(nearby.station_code) }
-                else if (selectedNearbyStation!!.type == "fgc") { selectedStation = ApiClient.fgcApiService.getFgcStation(nearby.station_code) }
-                else if (selectedNearbyStation!!.type == "tram") { selectedStation = ApiClient.tramApiService.getTramStation(nearby.station_code) }
-                else if (selectedNearbyStation!!.type == "bicing") { selectedBicingStation = ApiClient.bicingApiService.getBicingStation(nearby.station_code) }
+                when (selectedNearbyStation!!.type) {
+                    "bus" -> {
+                        selectedStation = ApiClient.busApiService.getBusStop(nearby.station_code)
+                        selectedStationConnections = ApiClient.busApiService.getBusStopConnections(nearby.station_code)
+                    }
+                    "metro" -> {
+                        selectedStation = ApiClient.metroApiService.getMetroStation(nearby.station_code)
+                        selectedStationConnections = ApiClient.metroApiService.getMetroStationConnections(nearby.station_code)
+                    }
+                    "rodalies" -> { selectedStation = ApiClient.rodaliesApiService.getRodaliesStation(nearby.station_code) }
+                    "fgc" -> { selectedStation = ApiClient.fgcApiService.getFgcStation(nearby.station_code) }
+                    "tram" -> { selectedStation = ApiClient.tramApiService.getTramStation(nearby.station_code) }
+                    "bicing" -> { selectedBicingStation = ApiClient.bicingApiService.getBicingStation(nearby.station_code) }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -104,14 +113,6 @@ fun MapScreen(context: Context) {
     LaunchedEffect(userLocation) {
         val latLng = userLocation ?: return@LaunchedEffect
 
-        mapView.getMapAsync { map ->
-            // Cámara inicial o animada
-            map.cameraPosition = CameraPosition.Builder()
-                .target(latLng)
-                .zoom(16.0)
-                .build()
-        }
-
         val currentLoc = Location("current").apply {
             latitude = latLng.latitude
             longitude = latLng.longitude
@@ -127,71 +128,86 @@ fun MapScreen(context: Context) {
             results[0] > 100f
         } ?: true
 
+
+
         if (needUpdate || cachedStations.isEmpty()) {
-            cachedStations = getNearbyStations(latLng.latitude, latLng.longitude, 0.5)
-            lastLocation = currentLoc
-        }
-
-        // Pintar marcadores
-        mapView.getMapAsync { map ->
-            map.clear()
-            markerToStation.clear()
-
-            cachedStations.forEach { station ->
-                val coords = LatLng(station.coordinates[0], station.coordinates[1])
-                val drawableId = appContext.resources.getIdentifier(
-                    station.type.lowercase(),
-                    "drawable",
-                    appContext.packageName
-                )
-                val sizePx = markerSize(station.type)
-                val marker = map.addMarker(
-                    MarkerOptions()
-                        .position(coords)
-                        .title(station.station_name)
-                        .icon(getMarkerIcon(appContext, drawableId, sizePx = sizePx))
-                )
-                markerToStation[marker] = station
+            if (selectedNearbyStation == null) {
+                mapView.getMapAsync { map ->
+                    // Cámara inicial o animada
+                    map.cameraPosition = CameraPosition.Builder()
+                        .target(latLng)
+                        .zoom(16.0)
+                        .build()
+                }
             }
 
-            map.setOnMarkerClickListener { marker ->
-                markerToStation[marker]?.let { st ->
-                    lastSelectedMarker?.let { previous ->
-                        markerToStation[previous]?.let { prevStation ->
-                            val prevSize = markerSize(prevStation.type)
-                            val prevDrawable = appContext.resources.getIdentifier(
-                                prevStation.type.lowercase(),
-                                "drawable",
-                                appContext.packageName
-                            )
-                            previous.setIcon(getMarkerIcon(appContext, prevDrawable, sizePx = prevSize))
-                        }
-                    }
+            isLoadingNearbyStations = true
+            cachedStations = getNearbyStations(latLng.latitude, latLng.longitude, 0.5)
+            isLoadingNearbyStations = false
+            lastLocation = currentLoc
 
-                    selectedNearbyStation = st
-                    val baseSize = markerSize(st.type)
-                    val selectedDrawable = appContext.resources.getIdentifier(
-                        st.type.lowercase(),
+            // Pintar marcadores
+            mapView.getMapAsync { map ->
+                map.clear()
+                markerToStation.clear()
+
+                cachedStations.forEach { station ->
+                    val coords = LatLng(station.coordinates[0], station.coordinates[1])
+                    val drawableId = appContext.resources.getIdentifier(
+                        station.type.lowercase(),
                         "drawable",
                         appContext.packageName
                     )
-                    marker.setIcon(getMarkerIcon(appContext, selectedDrawable, sizePx = baseSize * 2))
-                    lastSelectedMarker = marker
+                    val sizePx = markerSize(station.type)
+                    val marker = map.addMarker(
+                        MarkerOptions()
+                            .position(coords)
+                            .title(station.station_name)
+                            .icon(getMarkerIcon(appContext, drawableId, sizePx = sizePx))
+                    )
+                    markerToStation[marker] = station
+                }
 
-                    val cameraPosition = CameraPosition.Builder()
-                        .target(marker.position)
-                        .zoom(17.0)
-                        .build()
-                    map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
+                map.setOnMarkerClickListener { marker ->
+                    markerToStation[marker]?.let { st ->
+                        lastSelectedMarker?.let { previous ->
+                            markerToStation[previous]?.let { prevStation ->
+                                val prevSize = markerSize(prevStation.type)
+                                val prevDrawable = appContext.resources.getIdentifier(
+                                    prevStation.type.lowercase(),
+                                    "drawable",
+                                    appContext.packageName
+                                )
+                                previous.setIcon(getMarkerIcon(appContext, prevDrawable, sizePx = prevSize))
+                            }
+                        }
 
-                    scope.launch { sheetState.show() }
-                    true
-                } ?: false
+                        selectedNearbyStation = st
+                        val baseSize = markerSize(st.type)
+                        val selectedDrawable = appContext.resources.getIdentifier(
+                            st.type.lowercase(),
+                            "drawable",
+                            appContext.packageName
+                        )
+                        marker.setIcon(getMarkerIcon(appContext, selectedDrawable, sizePx = baseSize * 2))
+                        lastSelectedMarker = marker
+
+                        val cameraPosition = CameraPosition.Builder()
+                            .target(marker.position.withOffset(-0.0005 ))
+                            .zoom(17.0)
+                            .build()
+                        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
+
+                        scope.launch { sheetState.show() }
+                        true
+                    } ?: false
+                }
             }
         }
     }
 
     // UI principal
+
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
 
@@ -207,6 +223,16 @@ fun MapScreen(context: Context) {
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
         )
+
+        if (isLoadingNearbyStations) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 
     // Hoja inferior con datos
@@ -234,7 +260,7 @@ fun MapScreen(context: Context) {
             scrimColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth().fillMaxHeight()
         ) {
-            BottomSheetContent(selectedNearbyStation!!, selectedStation, selectedBicingStation)
+            BottomSheetContent(selectedNearbyStation!!, selectedStation, selectedBicingStation, selectedStationConnections)
         }
     }
 }
@@ -251,7 +277,7 @@ private fun markerSize(type: String): Int =
     }
 
 @Composable
-private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedStation: StationDto?, selectedBicingStation: BicingStation?) {
+private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedStation: StationDto?, selectedBicingStation: BicingStation?, selectedStationConnections: List<LineDto>?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -356,10 +382,9 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
 
                 } else {
                     selectedNearbyStation?.let { st ->          // el NearbyStation seleccionado
-                        selectedStation?.let { station ->       // el StationDto con conexiones
-                            // Separa en dos categorías
-                            val lineas = station.connections?.filter { it.transport_type.equals(st.type, ignoreCase = true) }
-                            val conexiones = station.connections?.filter { !it.transport_type.equals(st.type, ignoreCase = true) }
+                        selectedStation?.let { station ->
+                            val lineas = selectedStationConnections?.filter { it.transport_type.equals(st.type, ignoreCase = true) }
+                            val conexiones = selectedStationConnections?.filter { !it.transport_type.equals(st.type, ignoreCase = true) }
 
                             Column(
                                 modifier = Modifier
@@ -477,14 +502,12 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
 
 
 @Composable
-fun rememberMapView(context: Context): Pair<MapView, MapLibreMap?> {
+fun rememberMapView(context: Context): MapView {
     MapLibre.getInstance(context)
-    var mapboxMap by remember { mutableStateOf<MapLibreMap?>(null) }
     val mapView = remember {
         MapView(context).apply {
             onCreate(null)
             getMapAsync { map ->
-                mapboxMap = map
                 map.setStyle(
                     Style.Builder().fromUri(
                         "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
@@ -521,5 +544,5 @@ fun rememberMapView(context: Context): Pair<MapView, MapLibreMap?> {
         }
     }
 
-    return Pair(mapView, mapboxMap)
+    return mapView
 }

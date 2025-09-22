@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="Theme.BCNTransit" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.BCNTransit.Splash" parent="Theme.SplashScreen">
+        <!-- Color que se ve detrás del icono -->
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+
+        <!-- Icono centrado mientras carga -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/trace</item>
+
+        <!-- Duración opcional de la animación -->
+        <item name="windowSplashScreenAnimationDuration">5000</item>
+
+        <!-- Tema que tendrá la actividad después del splash -->
+        <item name="postSplashScreenTheme">@style/Theme.BCNTransit</item>
+    </style>
 </resources>

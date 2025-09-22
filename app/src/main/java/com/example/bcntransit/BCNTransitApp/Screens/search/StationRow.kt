@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.model.StationDto
 import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.model.FavoriteDto
+import kotlinx.coroutines.launch
 
 @Composable
 fun StationRow(
@@ -41,6 +45,9 @@ fun StationRow(
     val halfCircle = circleSize / 2
 
     var isFavorite by remember { mutableStateOf(false) }
+    var isLoadingFavorite by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
     LaunchedEffect(station.code, currentUserId) {
         try {
             isFavorite = ApiClient.userApiService.userHasFavorite(
@@ -52,6 +59,7 @@ fun StationRow(
             e.printStackTrace()
         }
     }
+
 
     Row(
         modifier = Modifier
@@ -87,12 +95,12 @@ fun StationRow(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // ---- Cambiado: peso en la Column, no en los Text ----
         Column(
-            modifier = Modifier.weight(1f)   // ocupa todo el espacio intermedio
+            modifier = Modifier.weight(1f)
         ) {
             val alertText = if (station.has_alerts) "Incidencias" else "Servicio normal"
             val alertColor = if (station.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+
             Text(
                 text = station.name_with_emoji ?: station.name,
                 style = MaterialTheme.typography.titleMedium
@@ -109,12 +117,55 @@ fun StationRow(
         }
 
         // Este IconButton quedará pegado al borde derecho
-        IconButton(onClick = { /* TODO: marcar favorito */ }) {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                contentDescription = "Favorito",
-                tint = CustomColors.RED.color
-            )
+        IconButton(
+            onClick = {
+                scope.launch {
+                    if (isFavorite) {
+                        try {
+                            isLoadingFavorite = true
+                            ApiClient.userApiService.deleteUserFavorite(currentUserId, lineType, station.code)
+                            isFavorite = false
+                        } catch(e: Exception) {
+                            e.printStackTrace()
+                        } finally {
+                            isLoadingFavorite = false
+                        }
+                    } else {
+                        try {
+                            isLoadingFavorite = true
+                            ApiClient.userApiService.addUserFavorite(
+                                currentUserId,
+                                favorite = FavoriteDto(
+                                        USER_ID = currentUserId,
+                                        TYPE = lineType,
+                                        LINE_CODE = station.line_code,
+                                        LINE_NAME = station.line_name,
+                                        LINE_NAME_WITH_EMOJI = station.line_name_with_emoji ?: "",
+                                        STATION_CODE = station.code,
+                                        STATION_NAME = station.name,
+                                        STATION_GROUP_CODE = station.CODI_GRUP_ESTACIO.toString(),
+                                        coordinates = listOf(station.latitude, station.longitude)
+                                    )
+                                )
+                            isFavorite = true
+                        } catch(e: Exception) {
+                            e.printStackTrace()
+                        } finally {
+                            isLoadingFavorite = false
+                        }
+                    }
+                }
+            }
+        ) {
+            if (isLoadingFavorite) {
+                CircularProgressIndicator()
+            } else {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                    contentDescription = "Favorito",
+                    tint = CustomColors.RED.color
+                )
+            }
         }
     }
 }

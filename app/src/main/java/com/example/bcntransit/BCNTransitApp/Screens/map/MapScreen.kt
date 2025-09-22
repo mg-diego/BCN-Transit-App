@@ -27,6 +27,7 @@ import com.example.bcntransit.model.BicingStation
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.NearbyStation
 import com.example.bcntransit.model.StationDto
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.Marker
@@ -86,107 +87,106 @@ fun MapScreen(context: Context) {
     /**
      * Configuración inicial del mapa y carga de estaciones cercanas
      */
-    LaunchedEffect(mapView) {
-        val userLocation = getUserLocation(appContext)
-        userLocation?.let { latLng ->
-            // Cámara inicial
-            mapView.getMapAsync { map ->
-                map.cameraPosition = CameraPosition.Builder()
-                    .target(latLng)
-                    .zoom(16.0)
-                    .build()
-            }
+    var userLocation by remember { mutableStateOf<LatLng?>(null) }
 
-            val currentLoc = Location("current").apply {
-                latitude = latLng.latitude
-                longitude = latLng.longitude
+    LaunchedEffect(Unit) {
+        // Lanzamos un bucle para actualizar la ubicación periódicamente
+        while (true) {
+            val newLocation = getUserLocation(appContext)
+            if (newLocation != null) {
+                userLocation = newLocation
             }
+            delay(5000) // cada 5 segundos, ajusta según necesidad
+        }
+    }
 
-            val needUpdate = lastLocation?.let { old ->
-                val results = FloatArray(1)
-                Location.distanceBetween(
-                    old.latitude, old.longitude,
-                    currentLoc.latitude, currentLoc.longitude,
-                    results
+    // Efecto que se dispara cada vez que la ubicación cambia
+    LaunchedEffect(userLocation) {
+        val latLng = userLocation ?: return@LaunchedEffect
+
+        mapView.getMapAsync { map ->
+            // Cámara inicial o animada
+            map.cameraPosition = CameraPosition.Builder()
+                .target(latLng)
+                .zoom(16.0)
+                .build()
+        }
+
+        val currentLoc = Location("current").apply {
+            latitude = latLng.latitude
+            longitude = latLng.longitude
+        }
+
+        val needUpdate = lastLocation?.let { old ->
+            val results = FloatArray(1)
+            Location.distanceBetween(
+                old.latitude, old.longitude,
+                currentLoc.latitude, currentLoc.longitude,
+                results
+            )
+            results[0] > 100f
+        } ?: true
+
+        if (needUpdate || cachedStations.isEmpty()) {
+            cachedStations = getNearbyStations(latLng.latitude, latLng.longitude, 0.5)
+            lastLocation = currentLoc
+        }
+
+        // Pintar marcadores
+        mapView.getMapAsync { map ->
+            map.clear()
+            markerToStation.clear()
+
+            cachedStations.forEach { station ->
+                val coords = LatLng(station.coordinates[0], station.coordinates[1])
+                val drawableId = appContext.resources.getIdentifier(
+                    station.type.lowercase(),
+                    "drawable",
+                    appContext.packageName
                 )
-                results[0] > 100f
-            } ?: true
-
-            if (needUpdate || cachedStations.isEmpty()) {
-                cachedStations = getNearbyStations(
-                    latLng.latitude,
-                    latLng.longitude,
-                    0.5
+                val sizePx = markerSize(station.type)
+                val marker = map.addMarker(
+                    MarkerOptions()
+                        .position(coords)
+                        .title(station.station_name)
+                        .icon(getMarkerIcon(appContext, drawableId, sizePx = sizePx))
                 )
-                lastLocation = currentLoc
+                markerToStation[marker] = station
             }
 
-            // Pintar marcadores y registrar clicks
-            mapView.getMapAsync { map ->
-                map.clear()
-                markerToStation.clear()
+            map.setOnMarkerClickListener { marker ->
+                markerToStation[marker]?.let { st ->
+                    lastSelectedMarker?.let { previous ->
+                        markerToStation[previous]?.let { prevStation ->
+                            val prevSize = markerSize(prevStation.type)
+                            val prevDrawable = appContext.resources.getIdentifier(
+                                prevStation.type.lowercase(),
+                                "drawable",
+                                appContext.packageName
+                            )
+                            previous.setIcon(getMarkerIcon(appContext, prevDrawable, sizePx = prevSize))
+                        }
+                    }
 
-                cachedStations.forEach { station ->
-                    val coords = LatLng(station.coordinates[0], station.coordinates[1])
-                    val drawableId = appContext.resources.getIdentifier(
-                        station.type.lowercase(),
+                    selectedNearbyStation = st
+                    val baseSize = markerSize(st.type)
+                    val selectedDrawable = appContext.resources.getIdentifier(
+                        st.type.lowercase(),
                         "drawable",
                         appContext.packageName
                     )
-                    val sizePx = markerSize(station.type)
-                    val marker = map.addMarker(
-                        MarkerOptions()
-                            .position(coords)
-                            .title(station.station_name)
-                            .icon(getMarkerIcon(appContext, drawableId, sizePx = sizePx))
-                    )
-                    markerToStation[marker] = station
-                }
+                    marker.setIcon(getMarkerIcon(appContext, selectedDrawable, sizePx = baseSize * 2))
+                    lastSelectedMarker = marker
 
-                map.setOnMarkerClickListener { marker ->
-                    markerToStation[marker]?.let { st ->
-                        // Restaurar icono previo
-                        lastSelectedMarker?.let { previous ->
-                            markerToStation[previous]?.let { prevStation ->
-                                val prevSize = markerSize(prevStation.type)
-                                val prevDrawable = appContext.resources.getIdentifier(
-                                    prevStation.type.lowercase(),
-                                    "drawable",
-                                    appContext.packageName
-                                )
-                                previous.setIcon(
-                                    getMarkerIcon(appContext, prevDrawable, sizePx = prevSize)
-                                )
-                            }
-                        }
+                    val cameraPosition = CameraPosition.Builder()
+                        .target(marker.position)
+                        .zoom(17.0)
+                        .build()
+                    map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
 
-                        selectedNearbyStation = st
-                        val baseSize = markerSize(st.type)
-                        val selectedDrawable = appContext.resources.getIdentifier(
-                            st.type.lowercase(),
-                            "drawable",
-                            appContext.packageName
-                        )
-                        marker.setIcon(
-                            getMarkerIcon(appContext, selectedDrawable, sizePx = baseSize * 2)
-                        )
-                        lastSelectedMarker = marker
-
-                        // Animar cámara
-                        val cameraPosition = CameraPosition.Builder()
-                            .target(marker.position)
-                            .zoom(17.0)
-                            .build()
-                        map.animateCamera(
-                            CameraUpdateFactory.newCameraPosition(cameraPosition),
-                            1000,
-                            null
-                        )
-
-                        scope.launch { sheetState.show() }
-                        true
-                    } ?: false
-                }
+                    scope.launch { sheetState.show() }
+                    true
+                } ?: false
             }
         }
     }

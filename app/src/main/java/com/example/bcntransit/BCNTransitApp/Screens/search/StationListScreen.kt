@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.StationDto
 
@@ -24,12 +24,30 @@ import com.example.bcntransit.model.StationDto
 @Composable
 fun StationListScreen(
     line: LineDto,
-    stations: List<StationDto>,
-    loading: Boolean,
-    error: String? = null,
+    apiService: ApiService,
     currentUserId: String,
     onStationClick: (StationDto) -> Unit
 ) {
+
+    var stations by remember { mutableStateOf<List<StationDto>>(emptyList()) }
+    var loadingStations by remember { mutableStateOf(false) }
+    var errorStations by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(line) {
+        loadingStations = true
+        errorStations = null
+        try {
+            stations = apiService.getStationsByLine(line.code)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            errorStations = e.message
+        } finally {
+            loadingStations = false
+        }
+    }
+
+
+
     val parsedColor = Color(
         android.graphics.Color.parseColor(
             if (line.color.startsWith("#")) line.color else "#${line.color}"
@@ -112,11 +130,11 @@ fun StationListScreen(
         }
 
         when {
-            loading -> Box(
+            loadingStations -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) { CircularProgressIndicator() }
-            error != null -> Text("Error: $error", color = Color.Red)
+            errorStations != null -> Text("Error: $errorStations", color = Color.Red)
 
             else -> LazyColumn(
                 modifier = Modifier.padding(16.dp),

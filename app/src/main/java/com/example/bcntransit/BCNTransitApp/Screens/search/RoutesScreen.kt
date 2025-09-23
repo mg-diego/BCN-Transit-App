@@ -16,9 +16,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
+import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
+import kotlinx.coroutines.delay
 import remainingTime
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -29,12 +32,34 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun RoutesScreen(
     station: StationDto,
-    routes: List<RouteDto>,
-    loading: Boolean,
-    error: String?
+    lineCode: String,
+    apiService: ApiService
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    var routes by remember { mutableStateOf<List<RouteDto>>(emptyList()) }
+    var loadingRoutes by remember { mutableStateOf(false) }
+    var errorRoutes by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(station) {
+        while (true) {
+            loadingRoutes = true
+            errorRoutes = null
+            try {
+                routes = apiService.getStationRoutes(station.code).let { list ->
+                    if (station.transport_type == TransportType.BUS.type) list
+                    else list.filter { it.line_code == lineCode }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                errorRoutes = e.message
+            } finally {
+                loadingRoutes = false
+            }
+            delay(20_000L)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -127,7 +152,7 @@ fun RoutesScreen(
         }
 
         when {
-            loading -> {
+            loadingRoutes -> {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -135,9 +160,9 @@ fun RoutesScreen(
                     CircularProgressIndicator()
                 }
             }
-            error != null -> {
+            errorRoutes != null -> {
                 Text(
-                    text = "Error cargando rutas: $error",
+                    text = "Error cargando rutas: $errorRoutes",
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -252,7 +277,7 @@ fun RoutesScreen(
                         }
 
                         // Overlay loader en la card mientras se recarga
-                        if (loading) {
+                        if (loadingRoutes) {
                             Box(
                                 modifier = Modifier
                                     .matchParentSize()

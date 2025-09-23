@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +33,7 @@ fun FavoritesScreen(
 
     var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
+    var deletingFavorite by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(currentUserId) {
@@ -143,6 +143,7 @@ fun FavoritesScreen(
                             onDelete = {
                                 coroutineScope.launch {
                                     try {
+                                        loading = true
                                         val deleted = ApiClient.userApiService.deleteUserFavorite(
                                             currentUserId,
                                             type = fav.TYPE,
@@ -157,6 +158,8 @@ fun FavoritesScreen(
                                     } catch (e: Exception) {
                                         e.printStackTrace()
                                         snackbarHostState.showSnackbar("Error al eliminar favorito")
+                                    } finally {
+                                        loading = false
                                     }
                                 }
                             }
@@ -174,6 +177,33 @@ fun FavoriteCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    // Estado para mostrar u ocultar el diálogo
+    var showDialog by remember { mutableStateOf(false) }
+
+    // Diálogo de confirmación
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Eliminar favorito") },
+            text = { Text("¿Seguro que deseas eliminar este favorito?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog = false
+                        onDelete()
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -189,11 +219,9 @@ fun FavoriteCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val context = LocalContext.current
-            val drawableName =
-                "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
+            val drawableName = "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
             val drawableId = remember(fav.LINE_NAME) {
-                context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                    .takeIf { it != 0 }
+                context.resources.getIdentifier(drawableName, "drawable", context.packageName) .takeIf { it != 0 }
                     ?: context.resources.getIdentifier(fav.TYPE, "drawable", context.packageName)
             }
 
@@ -207,30 +235,20 @@ fun FavoriteCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(
-                    fav.STATION_NAME,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    "${fav.TYPE.uppercase()} (${fav.STATION_CODE})",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CustomColors.GRAY.color
-                )
+                Text( fav.STATION_NAME, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text( "${fav.TYPE.uppercase()} (${fav.STATION_CODE})", style = MaterialTheme.typography.bodyMedium, color = CustomColors.GRAY.color )
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Column {
-                IconButton(onClick = {
-                    onDelete()
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = "Eliminar favorito",
-                        tint = CustomColors.RED.color
-                    )
-                }
+            IconButton(
+                onClick = { showDialog = true }   // ← Abre el diálogo en lugar de borrar directo
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = "Eliminar favorito",
+                    tint = CustomColors.RED.color
+                )
             }
         }
     }

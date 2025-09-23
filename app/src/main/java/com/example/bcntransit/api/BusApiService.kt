@@ -6,22 +6,22 @@ import com.example.bcntransit.model.StationDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface BusApiService {
+interface BusApiService : ApiService {
     @GET("bus/lines")
-    suspend fun getBusLines(): List<LineDto>
+    override suspend fun getLines(): List<LineDto>
 
     @GET("bus/stops")
-    suspend fun getBusStops(): List<StationDto>
+    override suspend fun getStations(): List<StationDto>
+
+    @GET("bus/stops/{stationCode}/routes")
+    override suspend fun getStationRoutes(@Path("stationCode") stationCode: String): List<RouteDto>
 
     @GET("bus/lines/{lineId}/stops")
-    suspend fun getBusStopsByLine(@Path("lineId") lineId: String): List<StationDto>
+    override suspend fun getStationsByLine(@Path("lineId") lineId: String): List<StationDto>
 
-    @GET("bus/stops/{stopId}/routes")
-    suspend fun getBusStopRoutes(@Path("stopId") stopId: String): List<RouteDto>
+    @GET("bus/stops/{stationCode}/connections")
+    override suspend fun getStationConnections(@Path("stationCode") stationCode: String): List<LineDto>
 
-    @GET("bus/stops/{stopId}/connections")
-    suspend fun getBusStopConnections(@Path("stopId") stopId: String): List<LineDto>
-
-    @GET("bus/stops/{stationId}")
-    suspend fun getBusStop(@Path("stationId") stationId: String): StationDto
+    @GET("bus/stops/{stationCode}")
+    override suspend fun getStationByCode(@Path("stationCode") stationCode: String): StationDto
 }

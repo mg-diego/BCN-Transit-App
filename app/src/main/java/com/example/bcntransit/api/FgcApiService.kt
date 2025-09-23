@@ -6,19 +6,19 @@ import com.example.bcntransit.model.StationDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface FgcApiService {
+interface FgcApiService : ApiService {
     @GET("fgc/lines")
-    suspend fun getFgcLines(): List<LineDto>
+    override suspend fun getLines(): List<LineDto>
 
     @GET("fgc/stations")
-    suspend fun getFgcStations(): List<StationDto>
+    override suspend fun getStations(): List<StationDto>
+
+    @GET("fgc/stations/{stationCode}/routes")
+    override suspend fun getStationRoutes(@Path("stationCode") stationCode: String): List<RouteDto>
 
     @GET("fgc/lines/{lineId}/stations")
-    suspend fun getFgcStationsByLine(@Path("lineId") lineId: String): List<StationDto>
+    override suspend fun getStationsByLine(@Path("lineId") lineId: String): List<StationDto>
 
-    @GET("fgc/stations/{stationId}/routes")
-    suspend fun getFgcStationRoutes(@Path("stationId") stationId: String): List<RouteDto>
-
-    @GET("fgc/stations/{stationId}")
-    suspend fun getFgcStation(@Path("stationId") stationId: String): StationDto
+    @GET("fgc/stations/{stationCode}")
+    override suspend fun getStationByCode(@Path("stationCode") stationCode: String): StationDto
 }

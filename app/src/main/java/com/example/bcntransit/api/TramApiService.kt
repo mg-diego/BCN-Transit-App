@@ -6,19 +6,19 @@ import com.example.bcntransit.model.StationDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface TramApiService {
+interface TramApiService : ApiService {
     @GET("tram/lines")
-    suspend fun getTramLines(): List<LineDto>
+    override suspend fun getLines(): List<LineDto>
 
     @GET("tram/stops")
-    suspend fun getTramStops(): List<StationDto>
+    override suspend fun getStations(): List<StationDto>
 
     @GET("tram/lines/{lineId}/stops")
-    suspend fun getTramStopsByLine(@Path("lineId") lineId: String): List<StationDto>
+    override suspend fun getStationsByLine(@Path("lineId") lineId: String): List<StationDto>
 
-    @GET("tram/stops/{stationId}/routes")
-    suspend fun getTramStopRoutes(@Path("stationId") stationId: String): List<RouteDto>
+    @GET("tram/stops/{stationCode}/routes")
+    override suspend fun getStationRoutes(@Path("stationId") stationCode: String): List<RouteDto>
 
-    @GET("tram/stops/{stationId}")
-    suspend fun getTramStation(@Path("stationId") stationId: String): StationDto
+    @GET("tram/stops/{stationCode}")
+    override suspend fun getStationByCode(@Path("stationCode") stationCode: String): StationDto
 }

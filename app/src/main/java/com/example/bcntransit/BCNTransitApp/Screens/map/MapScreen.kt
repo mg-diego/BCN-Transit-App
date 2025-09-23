@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
+import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.BicingStation
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.NearbyStation
@@ -43,7 +44,11 @@ import org.maplibre.android.maps.Style
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(context: Context) {
+fun MapScreen(
+    context: Context,
+    onStationSelected: (StationDto, String) -> Unit,
+    onLineSelected: (LineDto) -> Unit
+) {
     val mapView = rememberMapView(context)
     val appContext = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -67,28 +72,30 @@ fun MapScreen(context: Context) {
     var lastSelectedMarker by remember { mutableStateOf<Marker?>(null) }
 
     var isLoadingNearbyStations by remember { mutableStateOf(false) }
+    var isLoadingConnections by remember { mutableStateOf(false) }
     /**
      * Cuando cambia la estación seleccionada, pedimos detalles
      */
     LaunchedEffect(selectedNearbyStation) {
         selectedNearbyStation?.let { nearby ->
+            isLoadingConnections = true
+            var apiService: ApiService? = null
             try {
                 when (selectedNearbyStation!!.type) {
-                    "bus" -> {
-                        selectedStation = ApiClient.busApiService.getBusStop(nearby.station_code)
-                        selectedStationConnections = ApiClient.busApiService.getBusStopConnections(nearby.station_code)
-                    }
-                    "metro" -> {
-                        selectedStation = ApiClient.metroApiService.getMetroStation(nearby.station_code)
-                        selectedStationConnections = ApiClient.metroApiService.getMetroStationConnections(nearby.station_code)
-                    }
-                    "rodalies" -> { selectedStation = ApiClient.rodaliesApiService.getRodaliesStation(nearby.station_code) }
-                    "fgc" -> { selectedStation = ApiClient.fgcApiService.getFgcStation(nearby.station_code) }
-                    "tram" -> { selectedStation = ApiClient.tramApiService.getTramStation(nearby.station_code) }
+                    "bus" -> { apiService = ApiClient.busApiService }
+                    "metro" -> { apiService = ApiClient.metroApiService }
+                    "rodalies" -> { apiService = ApiClient.rodaliesApiService }
+                    "fgc" -> { apiService = ApiClient.fgcApiService }
+                    "tram" -> {  apiService = ApiClient.tramApiService }
                     "bicing" -> { selectedBicingStation = ApiClient.bicingApiService.getBicingStation(nearby.station_code) }
                 }
+
+                selectedStation = apiService?.getStationByCode(nearby.station_code)
+                selectedStationConnections = apiService?.getStationConnections(nearby.station_code)
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                isLoadingConnections = false
             }
         }
     }
@@ -260,7 +267,15 @@ fun MapScreen(context: Context) {
             scrimColor = Color.Transparent,
             modifier = Modifier.fillMaxWidth().fillMaxHeight()
         ) {
-            BottomSheetContent(selectedNearbyStation!!, selectedStation, selectedBicingStation, selectedStationConnections)
+            BottomSheetContent(
+                selectedNearbyStation!!,
+                selectedStation,
+                selectedBicingStation,
+                selectedStationConnections,
+                onStationSelected,
+                onLineSelected,
+                isLoadingConnections
+            )
         }
     }
 }
@@ -277,7 +292,15 @@ private fun markerSize(type: String): Int =
     }
 
 @Composable
-private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedStation: StationDto?, selectedBicingStation: BicingStation?, selectedStationConnections: List<LineDto>?) {
+private fun BottomSheetContent(
+    selectedNearbyStation: NearbyStation,
+    selectedStation: StationDto?,
+    selectedBicingStation: BicingStation?,
+    selectedStationConnections: List<LineDto>?,
+    onStationSelected: (StationDto, String) -> Unit,
+    onLineSelected: (LineDto) -> Unit,
+    isLoadingConnections: Boolean = false
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,7 +337,8 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
             }
             Spacer(modifier = Modifier.width(10.dp))
 
-            if ((selectedNearbyStation.type != "bicing" && selectedStation == null) || (selectedNearbyStation.type == "bicing" && selectedBicingStation == null)) {
+            //if ((selectedNearbyStation.type != "bicing" && selectedStation == null) || (selectedNearbyStation.type == "bicing" && selectedBicingStation == null)) {
+            if (isLoadingConnections) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -381,7 +405,7 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
                     }
 
                 } else {
-                    selectedNearbyStation?.let { st ->          // el NearbyStation seleccionado
+                    selectedNearbyStation?.let { st ->
                         selectedStation?.let { station ->
                             val lineas = selectedStationConnections?.filter { it.transport_type.equals(st.type, ignoreCase = true) }
                             val conexiones = selectedStationConnections?.filter { !it.transport_type.equals(st.type, ignoreCase = true) }
@@ -430,18 +454,22 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
                                                     .takeIf { it != 0 } ?: context.resources.getIdentifier(connection.transport_type, "drawable", context.packageName)
                                             }
 
-                                            Icon(
-                                                painter = painterResource(drawableId),
-                                                contentDescription = null,
-                                                tint = Color.Unspecified,
-                                                modifier = Modifier.size(42.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(16.dp))
-                                            Text(
-                                                connection.description,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                            TextButton(
+                                                onClick = { onStationSelected(selectedStation, connection.code ) }
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(drawableId),
+                                                    contentDescription = null,
+                                                    tint = Color.Unspecified,
+                                                    modifier = Modifier.size(42.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(16.dp))
+                                                Text(
+                                                    connection.description,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
                                         }
                                     }
                                     Spacer(modifier = Modifier.height(12.dp))
@@ -473,18 +501,23 @@ private fun BottomSheetContent(selectedNearbyStation: NearbyStation, selectedSta
                                                         .takeIf { it != 0 } ?: context.resources.getIdentifier(connection.transport_type, "drawable", context.packageName)
                                                 }
 
-                                                Icon(
-                                                    painter = painterResource(drawableId),
-                                                    contentDescription = null,
-                                                    tint = Color.Unspecified,
-                                                    modifier = Modifier.size(42.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(16.dp))
-                                                Text(
-                                                    connection.description,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
+                                                TextButton(
+                                                    onClick = { onLineSelected(connection) }
+                                                ) {
+
+                                                    Icon(
+                                                        painter = painterResource(drawableId),
+                                                        contentDescription = null,
+                                                        tint = Color.Unspecified,
+                                                        modifier = Modifier.size(42.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(16.dp))
+                                                    Text(
+                                                        connection.description,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(8.dp))

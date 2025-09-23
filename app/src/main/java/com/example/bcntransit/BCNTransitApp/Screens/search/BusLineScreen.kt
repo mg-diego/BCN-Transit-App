@@ -19,18 +19,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
+import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
 
 @Composable
-fun <T : StationDto> BusLinesScreen(
+fun BusLinesScreen(
     selectedLine: LineDto?,
-    selectedStation: T?,
-    loadLines: suspend () -> List<LineDto>,
-    loadStationsByLine: suspend (String) -> List<T>,
-    loadStationRoutes: suspend (String) -> List<RouteDto>,
+    selectedStation: StationDto?,
+    apiService: ApiService,
     onLineSelected: (LineDto) -> Unit,
     onStationSelected: (StationDto?) -> Unit,
     loadingFavorite: Boolean = false,
@@ -44,13 +42,7 @@ fun <T : StationDto> BusLinesScreen(
 
     var lines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
     var loadingLines by remember { mutableStateOf(true) }
-
-    var stations by remember { mutableStateOf<List<T>>(emptyList()) }
-    var stationRoutes by remember { mutableStateOf<List<RouteDto>>(emptyList()) }
-    var loadingStations by remember { mutableStateOf(false) }
-    var loadingRoutes by remember { mutableStateOf(false) }
-    var errorStations by remember { mutableStateOf<String?>(null) }
-    var errorRoutes by remember { mutableStateOf<String?>(null) }
+    var errorLines by remember { mutableStateOf<String?>(null) }
 
     val expandedStates = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -94,9 +86,9 @@ fun <T : StationDto> BusLinesScreen(
         if (selectedLine == null) {
             LaunchedEffect(Unit) {
                 loadingLines = true
-                errorStations = null
-                try { lines = loadLines() }
-                catch (e: Exception) { errorStations = e.message }
+                errorLines = null
+                try { lines = apiService.getLines() }
+                catch (e: Exception) { errorLines = e.message }
                 finally { loadingLines = false }
             }
 
@@ -172,19 +164,9 @@ fun <T : StationDto> BusLinesScreen(
 
         // ===== LISTADO DE ESTACIONES =====
         else if (selectedLine != null && selectedStation == null) {
-            LaunchedEffect(selectedLine) {
-                loadingStations = true
-                errorStations = null
-                try { stations = loadStationsByLine(selectedLine.code) }
-                catch (e: Exception) { errorStations = e.message }
-                finally { loadingStations = false }
-            }
-
             StationListScreen(
                 line = selectedLine,
-                stations = stations,
-                loading = loadingStations,
-                error = errorStations,
+                apiService = apiService,
                 onStationClick = { st -> onStationSelected(st) },
                 currentUserId = currentUserId
             )
@@ -192,17 +174,6 @@ fun <T : StationDto> BusLinesScreen(
 
         // ===== RUTAS DE LA ESTACIÓN SELECCIONADA =====
         if (selectedStation != null) {
-            LaunchedEffect(selectedStation) {
-                while (true) {
-                    loadingRoutes = true
-                    errorRoutes = null
-                    try { stationRoutes = loadStationRoutes(selectedStation.code) }
-                    catch (e: Exception) { errorRoutes = e.message }
-                    finally { loadingRoutes = false }
-                    kotlinx.coroutines.delay(20_000L)
-                }
-            }
-
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background,
@@ -227,9 +198,8 @@ fun <T : StationDto> BusLinesScreen(
 
                     RoutesScreen(
                         station = selectedStation,
-                        routes = stationRoutes,
-                        loading = loadingRoutes,
-                        error = errorRoutes
+                        lineCode = selectedLine?.code ?: "",
+                        apiService = apiService
                     )
                 }
             }

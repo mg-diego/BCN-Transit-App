@@ -11,13 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
@@ -96,7 +96,7 @@ fun RoutesScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         val alertText = if (station.has_alerts) "Incidencias" else "Servicio normal"
-                        val alertColor = if (station.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+                        val alertColor = if (station.has_alerts) colorResource(R.color.red) else colorResource(R.color.dark_green)
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
@@ -123,7 +123,7 @@ fun RoutesScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = CustomColors.MEDIUM_RED.color)
+                            colors = CardDefaults.cardColors(containerColor = colorResource(R.color.medium_red) )
                         ) {
                             Column(modifier = Modifier.padding(8.dp)) {
                                 // Título de la alerta en español
@@ -257,7 +257,7 @@ fun RoutesScreen(
                                                     }
                                                 },
                                                 style = MaterialTheme.typography.bodyLarge,
-                                                color = if (trip.delay_in_minutes > 0) { CustomColors.RED.color } else { CustomColors.DARK_GREEN.color },
+                                                color = if (trip.delay_in_minutes > 0) { colorResource(R.color.medium_red) } else { colorResource(R.color.dark_green) },
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Spacer(modifier = Modifier.width(12.dp))

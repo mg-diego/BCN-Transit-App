@@ -22,10 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.model.StationDto
-import com.example.bcntransit.data.enums.CustomColors
 import com.example.bcntransit.model.FavoriteDto
 import kotlinx.coroutines.launch
 
@@ -99,7 +100,7 @@ fun StationRow(
             modifier = Modifier.weight(1f)
         ) {
             val alertText = if (station.has_alerts) "Incidencias" else "Servicio normal"
-            val alertColor = if (station.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+            val alertColor = if (station.has_alerts) colorResource(R.color.medium_red) else colorResource(R.color.dark_green)
 
             Text(
                 text = station.name_with_emoji ?: station.name,
@@ -163,7 +164,7 @@ fun StationRow(
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
                     contentDescription = "Favorito",
-                    tint = CustomColors.RED.color
+                    tint = colorResource(R.color.red)
                 )
             }
         }

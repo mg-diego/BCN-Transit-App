@@ -15,9 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.R
 import com.example.bcntransit.model.LineDto
 
 @Composable
@@ -54,7 +55,7 @@ fun LineCard(line: LineDto, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
-            val alertColor = if (line.has_alerts) CustomColors.RED.color else CustomColors.DARK_GREEN.color
+            val alertColor = if (line.has_alerts) colorResource(R.color.red) else colorResource(R.color.dark_green)
             Column {
                 Text(line.description, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -64,7 +65,7 @@ fun LineCard(line: LineDto, onClick: () -> Unit) {
                             .background(alertColor, shape = CircleShape)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(alertText, style = MaterialTheme.typography.bodyMedium, color = CustomColors.GRAY.color)
+                    Text(alertText, style = MaterialTheme.typography.bodyMedium, color = colorResource(R.color.gray))
                 }
             }
         }

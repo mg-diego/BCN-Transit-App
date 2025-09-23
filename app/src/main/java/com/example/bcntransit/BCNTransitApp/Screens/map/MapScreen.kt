@@ -1,13 +1,11 @@
 package com.example.bcntransit.screens.map
 
+import SearchTopBar
 import android.content.Context
 import android.location.Location
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -51,10 +48,9 @@ fun MapScreen(
 ) {
     val mapView = rememberMapView(context)
     val appContext = LocalContext.current
-    val focusManager = LocalFocusManager.current
     val scope = rememberCoroutineScope()
 
-    var searchText by remember { mutableStateOf(TextFieldValue("")) }
+    var searchText: String by remember { mutableStateOf("") }
 
     // Estado para ubicación y estaciones
     var lastLocation by remember { mutableStateOf<Location?>(null) }
@@ -214,21 +210,13 @@ fun MapScreen(
     }
 
     // UI principal
-
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
 
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            label = { Text("Buscar estación o dirección") },
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
-                .background(Color.White.copy(alpha = 0.9f), shape = MaterialTheme.shapes.medium),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+        SearchTopBar(
+            modifier = Modifier.align(Alignment.TopCenter),
+            initialQuery = searchText,
+            onSearch = { }
         )
 
         if (isLoadingNearbyStations) {

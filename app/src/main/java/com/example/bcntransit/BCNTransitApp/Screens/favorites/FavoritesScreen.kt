@@ -16,9 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.data.enums.CustomColors
+import com.example.bcntransit.R
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.api.ApiClient
 import kotlinx.coroutines.launch
@@ -236,7 +237,7 @@ fun FavoriteCard(
 
             Column {
                 Text( fav.STATION_NAME, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text( "${fav.TYPE.uppercase()} (${fav.STATION_CODE})", style = MaterialTheme.typography.bodyMedium, color = CustomColors.GRAY.color )
+                Text( "${fav.TYPE.uppercase()} (${fav.STATION_CODE})", style = MaterialTheme.typography.bodyMedium, color = colorResource(R.color.gray) )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -247,7 +248,7 @@ fun FavoriteCard(
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = "Eliminar favorito",
-                    tint = CustomColors.RED.color
+                    tint = colorResource(R.color.red)
                 )
             }
         }

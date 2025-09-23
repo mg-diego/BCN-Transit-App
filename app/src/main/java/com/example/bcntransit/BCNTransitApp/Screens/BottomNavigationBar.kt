@@ -6,10 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.R
 import com.example.bcntransit.data.enums.BottomTab
-import com.example.bcntransit.data.enums.CustomColors
 
 @Composable
 fun BottomNavigationBar(
@@ -24,7 +25,7 @@ fun BottomNavigationBar(
         BottomTab.values().forEach { tab ->
             val isSelected = tab == selectedTab
 
-            val iconColor: Color = if (isSelected) CustomColors.RED.color
+            val iconColor: Color = if (isSelected) colorResource(R.color.red)
             else MaterialTheme.colorScheme.onSurfaceVariant
             val iconSize: Dp = if (isSelected) 36.dp else 24.dp  // tamaño más grande si está seleccionado
 
@@ -50,7 +51,7 @@ fun BottomNavigationBar(
                 selected = isSelected,
                 onClick = { onTabSelected(tab) },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = CustomColors.LOW_RED.color
+                    indicatorColor = colorResource(R.color.low_red)
                 )
             )
         }

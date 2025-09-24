@@ -64,7 +64,9 @@ fun TransportStationScreen(
                     RoutesScreen(
                         station = selectedStation,
                         lineCode = selectedLine?.code ?: "",
-                        apiService = apiService
+                        apiService = apiService,
+                        onStationSelected = { st -> onStationSelected(st) },
+                        onLineSelected = { ln -> onLineSelected(ln) }
                     )
                 }
             }

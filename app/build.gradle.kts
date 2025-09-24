@@ -45,6 +45,7 @@ android {
 dependencies {
     implementation("org.maplibre.gl:android-sdk:11.5.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.navigation:navigation-compose:2.8.0")
 
     // Coil Compose para cargar imágenes en Compose
     implementation("io.coil-kt:coil-compose:2.6.0")

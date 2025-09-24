@@ -17,7 +17,7 @@ interface TramApiService : ApiService {
     override suspend fun getStationsByLine(@Path("lineId") lineId: String): List<StationDto>
 
     @GET("tram/stops/{stationCode}/routes")
-    override suspend fun getStationRoutes(@Path("stationId") stationCode: String): List<RouteDto>
+    override suspend fun getStationRoutes(@Path("stationCode") stationCode: String): List<RouteDto>
 
     @GET("tram/stops/{stationCode}")
     override suspend fun getStationByCode(@Path("stationCode") stationCode: String): StationDto

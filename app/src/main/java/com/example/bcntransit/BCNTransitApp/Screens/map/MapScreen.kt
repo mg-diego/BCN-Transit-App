@@ -214,7 +214,7 @@ fun MapScreen(
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
         SearchTopBar(
             initialQuery = searchText,
-            onSearch = { val it = 2 },
+            onSearch = onStationSelected,
             enabled = !isLoadingNearbyStations
         )
 
@@ -531,7 +531,7 @@ fun rememberMapView(context: Context): MapView {
             getMapAsync { map ->
                 map.setStyle(
                     Style.Builder().fromUri(
-                        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+                        "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
                     )
                 ) { style ->
                     if (hasLocationPermission(context)) {

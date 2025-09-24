@@ -134,7 +134,7 @@ fun FavoritesScreen(
                 )
 
                 else -> LazyColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     itemsIndexed(favorites, key = { _, fav -> fav.STATION_CODE }) { _, fav ->
@@ -165,6 +165,7 @@ fun FavoritesScreen(
                                 }
                             }
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
             }
@@ -211,7 +212,7 @@ fun FavoriteCard(
             .height(80.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier

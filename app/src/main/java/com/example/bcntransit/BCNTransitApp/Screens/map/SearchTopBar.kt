@@ -18,15 +18,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
+import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.NearbyStation
+import com.example.bcntransit.model.StationDto
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchTopBar(
     initialQuery: String = "",
-    onSearch: (String) -> Unit,
+    onSearch: (StationDto, String) -> Unit,
     enabled: Boolean
 ) {
     var query by remember { mutableStateOf(initialQuery) }
@@ -34,6 +37,7 @@ fun SearchTopBar(
     var isSearching by remember { mutableStateOf(false) }
     var noResults by remember { mutableStateOf(false) }
     var stations by remember { mutableStateOf<List<NearbyStation>>(emptyList()) }
+    val coroutineScope = rememberCoroutineScope()
 
     val suggestions = remember(query, stations) { stations.take(20) }
 
@@ -58,9 +62,16 @@ fun SearchTopBar(
         SearchBar(
             query = query,
             onQueryChange = { if (enabled) query = it },
-            onSearch = { if (enabled) onSearch(query); active = false },
+            onSearch = {},
             active = active,
-            onActiveChange = { if (enabled) active = it },
+            onActiveChange = {
+                if (enabled) {
+                    active = it
+                    if (!it) {
+                        query = ""
+                    }
+                }
+            },
             enabled = enabled,
             leadingIcon = {
                 Box(
@@ -84,58 +95,96 @@ fun SearchTopBar(
                     else Modifier
                 )
         ) {
-            if (stations.isEmpty()) {
-                if (isSearching) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                        CircularProgressIndicator(color = colorResource(R.color.medium_red))
-                    }
-                } else if (noResults) {
-                    Text(
-                        text = "No se encontraron coincidencias. Prueba con otro nombre o con el identificador numérico.",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                } else {
-                    Text(
-                        text = "Puedes escribir el nombre completo o parcial del elemento que buscas, o introducir su identificador numérico si lo conoces.",
-                        modifier = Modifier.padding(16.dp)
-                    )
+            if (isSearching) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 1200.dp)
-                )  {
-                    items(suggestions) { station ->
-                        ListItem(
-                            headlineContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically){
-                                    val context = LocalContext.current
-                                    val drawableName = "${station.type}_${station.line_name?.lowercase()?.replace(" ", "_")}"
-                                    val drawableId = remember(station.line_name) {
-                                        context.resources.getIdentifier(drawableName, "drawable", context.packageName) .takeIf { it != 0 }
-                                            ?: context.resources.getIdentifier(station.type, "drawable", context.packageName)
-                                    }
-
-                                    Icon(
-                                        painter = painterResource(drawableId),
-                                        contentDescription = null,
-                                        tint = Color.Unspecified,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text("(${station.station_code}) - ${station.station_name}")
-                                }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(enabled = enabled) {
-                                    query = station.station_name
-                                    onSearch(station.station_name)
-                                    active = false
-                                }
+                if (stations.isEmpty()) {
+                    if (noResults) {
+                        Text(
+                            text = "No se encontraron coincidencias. Prueba con otro nombre o con el identificador numérico.",
+                            modifier = Modifier.padding(16.dp)
                         )
-                        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+                    } else {
+                        Text(
+                            text = "Puedes escribir el nombre completo o parcial del elemento que buscas, o introducir su identificador numérico si lo conoces.",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 1200.dp)
+                    ) {
+                        items(suggestions) { station ->
+                            ListItem(
+                                headlineContent = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        val context = LocalContext.current
+                                        val drawableName = "${station.type}_${
+                                            station.line_name?.lowercase()?.replace(" ", "_")
+                                        }"
+                                        val drawableId = remember(station.line_name) {
+                                            context.resources.getIdentifier(
+                                                drawableName,
+                                                "drawable",
+                                                context.packageName
+                                            ).takeIf { it != 0 }
+                                                ?: context.resources.getIdentifier(
+                                                    station.type,
+                                                    "drawable",
+                                                    context.packageName
+                                                )
+                                        }
+
+                                        Icon(
+                                            painter = painterResource(drawableId),
+                                            contentDescription = null,
+                                            tint = Color.Unspecified,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text("(${station.station_code}) - ${station.station_name}")
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = enabled) {
+
+                                        query = station.station_name
+                                        active = false
+                                        stations = emptyList()
+
+                                        var apiService: ApiService? = null
+
+                                        when (station.type) {
+                                            "bus" -> { apiService = ApiClient.busApiService }
+                                            "metro" -> { apiService = ApiClient.metroApiService }
+                                            "rodalies" -> { apiService = ApiClient.rodaliesApiService }
+                                            "fgc" -> { apiService = ApiClient.fgcApiService }
+                                            "tram" -> {  apiService = ApiClient.tramApiService }
+                                        }
+
+                                        coroutineScope.launch {
+                                            try {
+                                                val fullStation: StationDto? = apiService?.getStationByCode(station.station_code)
+                                                fullStation?.let { stationDto ->
+                                                    onSearch(stationDto, station.line_code ?: "")
+                                                }
+                                            } catch (e: Exception) {
+                                                // Manejo de error, mostrar snackbar, log, etc.
+                                            }
+                                        }
+                                    }
+                            )
+                            HorizontalDivider(
+                                Modifier,
+                                DividerDefaults.Thickness,
+                                DividerDefaults.color
+                            )
+                        }
                     }
                 }
             }

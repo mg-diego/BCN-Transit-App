@@ -197,7 +197,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                             SearchOption.BUS -> BusLinesScreen(
                                 selectedLine = selectedLine,
                                 selectedStation = selectedStation,
-                                apiService = ApiClient.busApiService,
                                 onLineSelected = { selectedLine = it },
                                 onStationSelected = { selectedStation = it },
                                 currentUserId = androidId

@@ -1,6 +1,5 @@
 package com.example.bcntransit.model
 
-
 data class NearbyStation(
     val type: String,
     val line_name: String? = null,

@@ -2,21 +2,17 @@ package com.example.bcntransit.screens.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -34,21 +30,18 @@ fun LineListScreen(
     apiService: ApiService,
     onLineClick: (LineDto) -> Unit
 ) {
-    val context = LocalContext.current
-    var lines by remember { mutableStateOf<List<LineDto>>(emptyList()) }
-    var loadingLines by remember { mutableStateOf(true) }
-    var errorStations by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(Unit) {
-        loadingLines = true
-        try {
-            lines = apiService.getLines()
-        } catch (e: Exception) {
-            errorStations = e.message
-        } finally {
-            loadingLines = false
+    val viewModel: LineListViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        key = "$transportType-${apiService.hashCode()}",
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return LineListViewModel(apiService, transportType) as T
+            }
         }
-    }
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Column {
         // Cabecera con sombra
@@ -80,7 +73,7 @@ fun LineListScreen(
                     .fillMaxWidth()
                     .height(6.dp)
                     .background(
-                        brush = Brush.verticalGradient(
+                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
                             colors = listOf(
                                 Color.Black.copy(alpha = 0.25f),
                                 Color.Transparent
@@ -91,15 +84,19 @@ fun LineListScreen(
         }
 
         when {
-            loadingLines -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            uiState.loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = colorResource(R.color.medium_red))
             }
-            errorStations != null -> Text("Error: $errorStations", color = Color.Red)
-            else -> LazyColumn(modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(lines) { line ->
+            uiState.error != null -> Text("Error: ${uiState.error}", color = Color.Red)
+            else -> androidx.compose.foundation.lazy.LazyColumn(
+                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.lines) { line ->
                     LineCard(line) {
                         onLineClick(line)
                     }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }

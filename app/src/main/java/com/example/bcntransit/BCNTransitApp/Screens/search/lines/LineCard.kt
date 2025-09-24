@@ -23,13 +23,22 @@ import com.example.bcntransit.model.LineDto
 
 @Composable
 fun LineCard(line: LineDto, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val drawableName = "${line.transport_type}_${line.name.lowercase().replace(" ", "_")}"
+    val drawableId = remember(line.name) {
+        context.resources.getIdentifier(drawableName, "drawable", context.packageName)
+            .takeIf { it != 0 } ?: context.resources.getIdentifier("${line.transport_type}", "drawable", context.packageName)
+    }
+    val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
+    val alertColor = if (line.has_alerts) colorResource(R.color.red) else colorResource(R.color.dark_green)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .clickable { onClick() }, // <-- aquí usamos el lambda
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(8.dp)
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -37,14 +46,6 @@ fun LineCard(line: LineDto, onClick: () -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            val context = LocalContext.current
-            val drawableName =
-                "${line.transport_type}_${line.name.lowercase().replace(" ", "_")}"
-            val drawableId = remember(line.name) {
-                context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                    .takeIf { it != 0 } ?: context.resources.getIdentifier("${line.transport_type}", "drawable", context.packageName)
-            }
-
             Icon(
                 painter = painterResource(drawableId),
                 contentDescription = null,
@@ -54,8 +55,6 @@ fun LineCard(line: LineDto, onClick: () -> Unit) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            val alertText = if (line.has_alerts) "Incidencias" else "Servicio normal"
-            val alertColor = if (line.has_alerts) colorResource(R.color.red) else colorResource(R.color.dark_green)
             Column {
                 Text(line.description, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {

@@ -13,9 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.bcntransit.R
@@ -46,6 +45,7 @@ fun MapScreen(
     onStationSelected: (StationDto, String) -> Unit,
     onLineSelected: (LineDto) -> Unit
 ) {
+
     val mapView = rememberMapView(context)
     val appContext = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -69,6 +69,7 @@ fun MapScreen(
 
     var isLoadingNearbyStations by remember { mutableStateOf(false) }
     var isLoadingConnections by remember { mutableStateOf(false) }
+
     /**
      * Cuando cambia la estación seleccionada, pedimos detalles
      */
@@ -130,7 +131,6 @@ fun MapScreen(
             )
             results[0] > 100f
         } ?: true
-
 
 
         if (needUpdate || cachedStations.isEmpty()) {
@@ -212,11 +212,10 @@ fun MapScreen(
     // UI principal
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
-
         SearchTopBar(
-            modifier = Modifier.align(Alignment.TopCenter),
             initialQuery = searchText,
-            onSearch = { }
+            onSearch = { val it = 2 },
+            enabled = !isLoadingNearbyStations
         )
 
         if (isLoadingNearbyStations) {
@@ -225,7 +224,9 @@ fun MapScreen(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                Column(horizontalAlignment = Alignment.CenterHorizontally){
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
+                }
             }
         }
     }
@@ -325,7 +326,6 @@ private fun BottomSheetContent(
             }
             Spacer(modifier = Modifier.width(10.dp))
 
-            //if ((selectedNearbyStation.type != "bicing" && selectedStation == null) || (selectedNearbyStation.type == "bicing" && selectedBicingStation == null)) {
             if (isLoadingConnections) {
                 Row(
                     modifier = Modifier
@@ -334,7 +334,7 @@ private fun BottomSheetContent(
                         .padding(top = 12.dp),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
                 }
 
             } else {

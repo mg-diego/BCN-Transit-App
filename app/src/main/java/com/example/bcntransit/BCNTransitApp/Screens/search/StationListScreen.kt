@@ -13,9 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.StationDto
@@ -133,7 +135,7 @@ fun StationListScreen(
             loadingStations -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+            ) { CircularProgressIndicator(color = colorResource(R.color.medium_red)) }
             errorStations != null -> Text("Error: $errorStations", color = Color.Red)
 
             else -> LazyColumn(

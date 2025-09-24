@@ -42,7 +42,7 @@ suspend fun getUserLocation(context: Context): LatLng? {
 
 suspend fun getNearbyStations(latitude: Double, longitude: Double, radiusKm: Double = 0.5): List<NearbyStation> {
     return try {
-        ApiClient.nearApiService.getNearbyStations(latitude, longitude, radiusKm)
+        ApiClient.resultsApiService.getResultsByLocation(latitude, longitude, radiusKm)
     } catch (e: Exception) {
         e.printStackTrace()
         emptyList()

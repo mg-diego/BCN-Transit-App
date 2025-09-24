@@ -36,7 +36,7 @@ fun BusLinesScreen(
 ) {
     if (loadingFavorite) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = colorResource(R.color.medium_red))
         }
     }
 
@@ -94,7 +94,7 @@ fun BusLinesScreen(
 
             if (loadingLines) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
                 }
             } else {
                 Column(modifier = Modifier.fillMaxSize()) {

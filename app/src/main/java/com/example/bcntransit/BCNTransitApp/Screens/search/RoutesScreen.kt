@@ -157,7 +157,7 @@ fun RoutesScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
                 }
             }
             errorRoutes != null -> {
@@ -284,7 +284,7 @@ fun RoutesScreen(
                                     .background(Color(0x80FFFFFF)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator()
+                                CircularProgressIndicator(color = colorResource(R.color.medium_red))
                             }
                         }
                     }

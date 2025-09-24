@@ -35,5 +35,5 @@ object ApiClient {
     val bicingApiService: BicingApiService = retrofit.create(BicingApiService::class.java)
     val userApiService : UserApiService = retrofit.create(UserApiService::class.java)
     val tramApiService: TramApiService = retrofit.create(TramApiService::class.java)
-    val nearApiService : ResultsApiService = retrofit.create(ResultsApiService::class.java)
+    val resultsApiService : ResultsApiService = retrofit.create(ResultsApiService::class.java)
 }

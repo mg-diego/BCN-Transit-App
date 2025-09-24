@@ -125,7 +125,7 @@ fun FavoritesScreen(
                 loading -> Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() }
+                ) { CircularProgressIndicator(color = colorResource(R.color.medium_red)) }
 
                 error != null -> Text(
                     text = "Error: $error",

@@ -5,7 +5,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.LineDto
@@ -30,7 +32,7 @@ fun TransportStationScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = colorResource(R.color.medium_red))
             }
         }
 

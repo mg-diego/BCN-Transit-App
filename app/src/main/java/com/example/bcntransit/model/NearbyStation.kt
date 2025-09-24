@@ -3,7 +3,8 @@ package com.example.bcntransit.model
 
 data class NearbyStation(
     val type: String,
-    val line_name: String? = null,  // solo para metro y bicing (vacío para bicing)
+    val line_name: String? = null,
+    val line_name_with_emoji: String? = null,   // solo para metro y bicing (vacío para bicing)
     val line_code: String? = null,  // puede ser String o Int, usar String para uniformidad
     val station_name: String,
     val station_code: String,       // convertir todo a String para uniformidad

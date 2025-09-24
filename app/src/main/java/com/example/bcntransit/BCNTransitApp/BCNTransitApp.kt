@@ -211,7 +211,9 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                     currentUserId = androidId,
                     onFavoriteSelected = { fav ->
                         isLoading = true
-                        selectedTab = BottomTab.SEARCH
+                        selectedStation = null
+                        selectedLine = null
+
                         currentSearchScreen = when (fav.TYPE.lowercase()) {
                             "metro" -> SearchOption.METRO
                             "tram" -> SearchOption.TRAM
@@ -220,9 +222,6 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                             "bus" -> SearchOption.BUS
                             else -> null
                         }
-
-                        selectedStation = null
-                        selectedLine = null
 
                         coroutineScope.launch {
                             try {
@@ -242,6 +241,7 @@ fun BCNTransitApp(onDataLoaded: () -> Unit) {
                                 e.printStackTrace()
                             } finally {
                                 isLoading = false
+                                selectedTab = BottomTab.SEARCH
                             }
                         }
                     }

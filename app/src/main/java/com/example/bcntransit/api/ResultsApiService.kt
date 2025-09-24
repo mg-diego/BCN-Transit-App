@@ -13,14 +13,14 @@ interface ResultsApiService {
      * @param radius Radio de búsqueda en km (opcional, default 1km)
      */
     @GET("results/near")
-    suspend fun getNearbyStations(
+    suspend fun getResultsByLocation(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
         @Query("radius") radiusKm: Double = 0.5
     ): List<NearbyStation>
 
     @GET("results/search")
-    suspend fun getStationsByName(
+    suspend fun getResultsByName(
         @Query("name") name: String
     ): List<NearbyStation>
 }

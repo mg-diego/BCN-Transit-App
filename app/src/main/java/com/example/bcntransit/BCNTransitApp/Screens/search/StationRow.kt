@@ -159,7 +159,7 @@ fun StationRow(
             }
         ) {
             if (isLoadingFavorite) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = colorResource(R.color.medium_red))
             } else {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,

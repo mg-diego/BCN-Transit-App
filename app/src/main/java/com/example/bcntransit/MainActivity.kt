@@ -14,7 +14,7 @@ import org.maplibre.android.MapLibre
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Instalar SplashScreen
-        val splashScreen = installSplashScreen()
+        //val splashScreen = installSplashScreen()
 
         // Ajustes de ventana y barra de estado
         WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -28,15 +28,12 @@ class MainActivity : ComponentActivity() {
         MapLibre.getInstance(this)
 
         // Estado de carga global
-        val isLoading = mutableStateOf(true)
 
         // Mantener splash hasta que se carguen los datos
-        splashScreen.setKeepOnScreenCondition { isLoading.value }
+        //splashScreen.setKeepOnScreenCondition { isLoading.value }
 
         setContent {
-            BCNTransitApp(
-                onDataLoaded = { isLoading.value = false }
-            )
+            BCNTransitApp()
         }
 
         // Solicitar permiso de ubicación

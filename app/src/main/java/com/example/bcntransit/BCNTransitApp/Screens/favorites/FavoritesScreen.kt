@@ -8,12 +8,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -34,7 +32,6 @@ fun FavoritesScreen(
 
     var favorites by remember { mutableStateOf<List<FavoriteDto>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
-    var deletingFavorite by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(currentUserId) {
@@ -51,88 +48,20 @@ fun FavoritesScreen(
     }
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState) { data ->
-                Snackbar(
-                    containerColor = Color(0xFF323232),
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(12.dp),
-                    action = {
-                        data.visuals.actionLabel?.let { actionLabel ->
-                            TextButton(onClick = { data.performAction() }) {
-                                Text(actionLabel, color = Color.Yellow)
-                            }
-                        }
-                    },
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = null,
-                            tint = Color.Green,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(data.visuals.message)
-                    }
-                }
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Cabecera
-            Box(Modifier.fillMaxWidth()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(42.dp)
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    Text("Favoritos", style = MaterialTheme.typography.titleLarge)
-                }
-
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .background(
-                            brush = Brush.verticalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = 0.25f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-            }
+            Header()
 
             when {
-                loading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator(color = colorResource(R.color.medium_red)) }
-
-                error != null -> Text(
-                    text = "Error: $error",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-
+                loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
+                }
+                error != null -> Text("Error: $error", color = Color.Red, modifier = Modifier.padding(16.dp))
                 else -> LazyColumn(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -147,28 +76,38 @@ fun FavoritesScreen(
                                         loading = true
                                         val deleted = ApiClient.userApiService.deleteUserFavorite(
                                             currentUserId,
-                                            type = fav.TYPE,
-                                            itemId = fav.STATION_CODE
+                                            fav.TYPE,
+                                            fav.STATION_CODE
                                         )
                                         if (deleted) {
                                             favorites = ApiClient.userApiService.getUserFavorites(currentUserId)
                                             snackbarHostState.showSnackbar("Favorito eliminado")
-                                        } else {
-                                            snackbarHostState.showSnackbar("Error al eliminar favorito")
-                                        }
+                                        } else snackbarHostState.showSnackbar("Error al eliminar")
                                     } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        snackbarHostState.showSnackbar("Error al eliminar favorito")
-                                    } finally {
-                                        loading = false
-                                    }
+                                        snackbarHostState.showSnackbar("Error al eliminar")
+                                    } finally { loading = false }
                                 }
                             }
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun Header() {
+    Box(Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Icon(Icons.Filled.Star, contentDescription = null, modifier = Modifier.size(42.dp))
+            Spacer(Modifier.width(16.dp))
+            Text("Favoritos", style = MaterialTheme.typography.titleLarge)
         }
     }
 }
@@ -255,3 +194,5 @@ fun FavoriteCard(
         }
     }
 }
+
+

@@ -1,6 +1,7 @@
 package com.example.bcntransit.api
 
 
+import com.example.bcntransit.data.enums.TransportType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -14,12 +15,11 @@ object ApiClient {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // Cliente con timeout aumentado solo para TramApiService
     private val defaultClient = OkHttpClient.Builder()
         .addInterceptor(logging)
-        .connectTimeout(60, TimeUnit.SECONDS)  // tiempo de conexión
-        .readTimeout(60, TimeUnit.SECONDS)     // tiempo de lectura
-        .writeTimeout(60, TimeUnit.SECONDS)    // tiempo de escritura
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     private val retrofit = Retrofit.Builder()
@@ -36,4 +36,15 @@ object ApiClient {
     val userApiService : UserApiService = retrofit.create(UserApiService::class.java)
     val tramApiService: TramApiService = retrofit.create(TramApiService::class.java)
     val resultsApiService : ResultsApiService = retrofit.create(ResultsApiService::class.java)
+
+    fun from(transportType: TransportType): ApiService {
+        return when (transportType) {
+            TransportType.METRO -> metroApiService
+            TransportType.BUS -> busApiService
+            TransportType.RODALIES -> rodaliesApiService
+            TransportType.FGC -> fgcApiService
+            TransportType.TRAM -> tramApiService
+            TransportType.BICING -> bicingApiService
+        }
+    }
 }

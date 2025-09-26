@@ -1,252 +1,203 @@
-package com.example.bcntransit
+    package com.example.bcntransit
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.data.enums.BottomTab
-import com.example.bcntransit.data.enums.SearchOption
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.StationDto
-import com.example.bcntransit.screens.BottomNavigationBar
-import com.example.bcntransit.screens.PlaceholderScreen
-import com.example.bcntransit.screens.map.MapScreen
-import com.example.bcntransit.screens.search.BusLinesScreen
-import com.example.bcntransit.screens.search.SearchScreen
-import com.example.bcntransit.screens.search.TransportStationScreen
-import android.provider.Settings
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.screens.favorites.FavoritesScreen
-import kotlinx.coroutines.launch
+    import androidx.compose.foundation.layout.padding
+    import androidx.compose.material3.Scaffold
+    import androidx.compose.runtime.*
+    import androidx.compose.ui.Modifier
+    import androidx.compose.ui.platform.LocalContext
+    import com.example.bcntransit.api.ApiClient
+    import com.example.bcntransit.data.enums.BottomTab
+    import com.example.bcntransit.model.LineDto
+    import com.example.bcntransit.model.StationDto
+    import com.example.bcntransit.screens.BottomNavigationBar
+    import com.example.bcntransit.screens.PlaceholderScreen
+    import com.example.bcntransit.screens.map.MapScreen
+    import com.example.bcntransit.screens.search.BusLinesScreen
+    import com.example.bcntransit.screens.search.SearchScreen
+    import android.provider.Settings
+    import androidx.navigation.NavType
+    import androidx.navigation.compose.NavHost
+    import androidx.navigation.compose.composable
+    import androidx.navigation.compose.currentBackStackEntryAsState
+    import androidx.navigation.compose.rememberNavController
+    import androidx.navigation.navArgument
+    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen
+    import com.example.bcntransit.data.enums.TransportType
+    import com.example.bcntransit.screens.favorites.FavoritesScreen
+    import com.example.bcntransit.screens.search.LineListScreen
+    import com.example.bcntransit.screens.search.RoutesScreen
 
-@Composable
-fun BCNTransitApp(onDataLoaded: () -> Unit) {
-    val context = LocalContext.current
+    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
+    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
+    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
+    import com.example.bcntransit.screens.search.StationListScreen
 
-    // Estados de datos
-    var selectedTab by remember { mutableStateOf(BottomTab.MAP) }
-    var currentSearchScreen by remember { mutableStateOf<SearchOption?>(null) }
-    var selectedLine by remember { mutableStateOf<LineDto?>(null) }
-    var selectedStation by remember { mutableStateOf<StationDto?>(null) }
-    val androidId = Settings.Secure.getString(
-        context.contentResolver,
-        Settings.Secure.ANDROID_ID
-    )
+    @Composable
+    fun BCNTransitApp() {
+        val navController = rememberNavController()
 
-    // Carga inicial de datos
-    LaunchedEffect(Unit) {
-        try {
-            onDataLoaded()
-            // registrar usuario primero (si no depende del resto, también podría ir en paralelo)
-            ApiClient.userApiService.registerUser(androidId)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        // Observa el destino actual del NavHost
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        // Deriva el BottomTab actual a partir de la ruta
+        val currentBottomTab = when (currentRoute) {
+            Screen.Map.route -> BottomTab.MAP
+            Screen.Search.route -> BottomTab.SEARCH
+            Screen.Favorites.route -> BottomTab.FAVORITES
+            Screen.User.route -> BottomTab.USER
+            else -> BottomTab.MAP
         }
-    }
 
-    val coroutineScope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+        val context = LocalContext.current
+        val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(
-                modifier = Modifier.fillMaxWidth(),
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    selectedTab = tab
-                    if (tab == BottomTab.SEARCH) {
-                        // Reseteamos selección al entrar en búsqueda
-                        currentSearchScreen = null
-                        selectedLine = null
-                        selectedStation = null
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            when (selectedTab) {
-                BottomTab.MAP -> MapScreen(
-                    context,
-                    onStationSelected = { station, lineCode ->
-                        isLoading = true
-                        selectedStation = null
-                        selectedLine = null
-
-                        currentSearchScreen = when (station.transport_type.lowercase()) {
-                            "metro" -> SearchOption.METRO
-                            "tram" -> SearchOption.TRAM
-                            "rodalies" -> SearchOption.RODALIES
-                            "fgc" -> SearchOption.FGC
-                            "bus" -> SearchOption.BUS
-                            else -> null
-                        }
-
-                        coroutineScope.launch {
-                            try {
-                                val apiService = when (station.transport_type.lowercase()) {
-                                    "metro" -> ApiClient.metroApiService
-                                    "tram" -> ApiClient.tramApiService
-                                    "rodalies" -> ApiClient.rodaliesApiService
-                                    "fgc" -> ApiClient.fgcApiService
-                                    "bus" -> ApiClient.busApiService
-                                    else -> ApiClient.metroApiService
-                                }
-
-                                selectedLine = apiService.getLines().find { it.code == lineCode }
-                                selectedStation = apiService.getStationsByLine(selectedLine?.code ?: "").find { it.name == station.name }
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            } finally {
-                                isLoading = false
-                                selectedTab = BottomTab.SEARCH
+        Scaffold(
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedTab = currentBottomTab,
+                    onTabSelected = { tab ->
+                        when (tab) {
+                            BottomTab.MAP -> navController.navigate(Screen.Map.route) {
+                                popUpTo(Screen.Map.route) { inclusive = false }
+                                launchSingleTop = true
                             }
-                        }
-                    },
-                    onLineSelected = { line ->
-                        isLoading = true
-                        selectedStation = null
-                        selectedLine = null
-
-                        currentSearchScreen = when (line.transport_type.lowercase()) {
-                            "metro" -> SearchOption.METRO
-                            "tram" -> SearchOption.TRAM
-                            "rodalies" -> SearchOption.RODALIES
-                            "fgc" -> SearchOption.FGC
-                            "bus" -> SearchOption.BUS
-                            else -> null
-                        }
-
-                        coroutineScope.launch {
-                            try {
-                                val apiService = when (line.transport_type.lowercase()) {
-                                    "metro" -> ApiClient.metroApiService
-                                    "tram" -> ApiClient.tramApiService
-                                    "rodalies" -> ApiClient.rodaliesApiService
-                                    "fgc" -> ApiClient.fgcApiService
-                                    "bus" -> ApiClient.busApiService
-                                    else -> ApiClient.metroApiService
-                                }
-
-                                selectedLine = apiService.getLines().find { it.code == line.code }
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            } finally {
-                                isLoading = false
-                                selectedTab = BottomTab.SEARCH
+                            BottomTab.SEARCH -> navController.navigate(Screen.Search.route) {
+                                popUpTo(Screen.Search.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            BottomTab.FAVORITES -> navController.navigate(Screen.Favorites.route) {
+                                popUpTo(Screen.Favorites.route) { inclusive = false }
+                                launchSingleTop = true
+                            }
+                            BottomTab.USER -> navController.navigate(Screen.User.route) {
+                                popUpTo(Screen.User.route) { inclusive = false }
+                                launchSingleTop = true
                             }
                         }
                     }
                 )
-                BottomTab.SEARCH -> {
-                    if (currentSearchScreen == null) {
-                        SearchScreen { currentSearchScreen = it }
+            }
+        ) { padding ->
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Map.route,
+                modifier = Modifier.padding(padding)
+            ) {
+                composable(Screen.Map.route) {
+                    MapScreen(
+                        onViewLine = { type: String, lineCode: String ->
+                            navController.navigate(
+                                Screen.SearchLine.viewLine(type, lineCode)
+                            )
+                        },
+                        onViewStation = { type: String, lineCode: String, stationCode: String ->
+                            navController.navigate(
+                                Screen.SearchStation.viewRoutes(type, lineCode, stationCode)
+                            )
+                        }
+                    )
+                }
+
+                composable(Screen.Search.route) {
+                    SearchScreen(
+                        onTypeSelected = { type ->
+                            navController.navigate(
+                                Screen.SearchType.viewType(type)
+                            )
+                        }
+                    )
+                }
+                /** LISTA DE LÍNEAS */
+                composable(
+                    route = Screen.SearchType.route,
+                    arguments = listOf(navArgument(typeParam) { type = NavType.StringType })
+                ) { backStack ->
+                    val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
+                    val transportType = TransportType.from(typeArg)
+                    if (transportType == TransportType.BUS) {
+                        BusLinesScreen(onLineClick = { line: LineDto ->
+                            navController.navigate(
+                                Screen.SearchLine.viewLine(typeArg, line.code)
+                            )
+                        })
                     } else {
-                        when (currentSearchScreen) {
-                            SearchOption.METRO -> TransportStationScreen(
-                                transportType = TransportType.METRO,
-                                selectedLine = selectedLine,
-                                selectedStation = selectedStation,
-                                apiService = ApiClient.metroApiService,
-                                onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it },
-                                isLoading = isLoading,
-                                currentUserId = androidId
-                            )
-                            SearchOption.TRAM -> TransportStationScreen(
-                                transportType = TransportType.TRAM,
-                                selectedLine = selectedLine,
-                                selectedStation = selectedStation,
-                                apiService = ApiClient.tramApiService,
-                                onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it },
-                                isLoading = isLoading,
-                                currentUserId = androidId
-                            )
-                            SearchOption.RODALIES -> TransportStationScreen(
-                                transportType = TransportType.RODALIES,
-                                selectedLine = selectedLine,
-                                selectedStation = selectedStation,
-                                apiService = ApiClient.rodaliesApiService,
-                                onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it },
-                                isLoading = isLoading,
-                                currentUserId = androidId
-                            )
-                            SearchOption.FGC -> TransportStationScreen(
-                                transportType = TransportType.FGC,
-                                selectedLine = selectedLine,
-                                selectedStation = selectedStation,
-                                apiService = ApiClient.fgcApiService,
-                                onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it },
-                                isLoading = isLoading,
-                                currentUserId = androidId
-                            )
-                            SearchOption.BUS -> BusLinesScreen(
-                                selectedLine = selectedLine,
-                                selectedStation = selectedStation,
-                                onLineSelected = { selectedLine = it },
-                                onStationSelected = { selectedStation = it },
-                                currentUserId = androidId
-                            )
-                            SearchOption.BICING -> PlaceholderScreen("Bicing")
-                            null -> {}
-                        }
-                    }
-                }
-                BottomTab.FAVORITES -> FavoritesScreen(
-                    currentUserId = androidId,
-                    onFavoriteSelected = { fav ->
-                        isLoading = true
-                        selectedStation = null
-                        selectedLine = null
-
-                        currentSearchScreen = when (fav.TYPE.lowercase()) {
-                            "metro" -> SearchOption.METRO
-                            "tram" -> SearchOption.TRAM
-                            "rodalies" -> SearchOption.RODALIES
-                            "fgc" -> SearchOption.FGC
-                            "bus" -> SearchOption.BUS
-                            else -> null
-                        }
-
-                        coroutineScope.launch {
-                            try {
-                                val apiService = when (fav.TYPE.lowercase()) {
-                                    "metro" -> ApiClient.metroApiService
-                                    "tram" -> ApiClient.tramApiService
-                                    "rodalies" -> ApiClient.rodaliesApiService
-                                    "fgc" -> ApiClient.fgcApiService
-                                    "bus" -> ApiClient.busApiService
-                                    else -> ApiClient.metroApiService
-                                }
-
-                                selectedLine = apiService.getLines().find { it.code == fav.LINE_CODE }
-                                selectedStation = apiService.getStationsByLine(selectedLine?.code ?: "").find { it.code == fav.STATION_CODE }
-
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            } finally {
-                                isLoading = false
-                                selectedTab = BottomTab.SEARCH
+                        LineListScreen(
+                            transportType = transportType,
+                            apiService = ApiClient.from(transportType),
+                            onLineClick = { line: LineDto ->
+                                navController.navigate(
+                                    Screen.SearchLine.viewLine(typeArg, line.code)
+                                )
                             }
-                        }
+                        )
                     }
-                )
-                BottomTab.USER -> PlaceholderScreen("Usuario")
+
+                }
+                /** LISTA DE ESTACIONES */
+                composable(
+                    route = Screen.SearchLine.route,
+                    arguments = listOf(
+                        navArgument(typeParam) { type = NavType.StringType },
+                        navArgument(lineCodeParam) { type = NavType.StringType }
+                    )
+                ) { backStack ->
+                    val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
+                    val lineCodeArg = backStack.arguments?.getString(lineCodeParam) ?: return@composable
+                    val transportType = TransportType.from(typeArg)
+                    StationListScreen (
+                        lineCode = lineCodeArg,
+                        transportType = TransportType.from(typeArg),
+                        apiService = ApiClient.from(transportType),
+                        currentUserId = androidId,
+                        onStationClick = { station: StationDto ->
+                            navController.navigate(
+                                Screen.SearchStation.viewRoutes(typeArg, lineCodeArg, station.code)
+                            )
+                        }
+                    )
+                }
+                /** RUTAS DE UNA ESTACIÓN */
+                composable(
+                    route = Screen.SearchStation.route,
+                    arguments = listOf(
+                        navArgument(typeParam) { type = NavType.StringType },
+                        navArgument(lineCodeParam) { type = NavType.StringType },
+                        navArgument(stationCodeParam) { type = NavType.StringType }
+                    )
+                ) { backStack ->
+                    val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
+                    val lineCodeArg = backStack.arguments?.getString(lineCodeParam) ?: return@composable
+                    val stationCodeParam = backStack.arguments?.getString(stationCodeParam) ?: return@composable
+                    val transportType = TransportType.from(typeArg)
+                    RoutesScreen(
+                        stationCode = stationCodeParam,
+                        lineCode = lineCodeArg,
+                        apiService = ApiClient.from(transportType),
+                        onConnectionClick = { stationCode: String, lineCode: String ->
+                            navController.navigate(
+                                Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)
+                            )
+                        }
+                    )
+                }
+
+                composable(Screen.Favorites.route) {
+                    FavoritesScreen(
+                        currentUserId = androidId,
+                        onFavoriteSelected = { fav ->
+                            navController.navigate(
+                                Screen.SearchStation.viewRoutes(
+                                    type = fav.TYPE,
+                                    lineCode = fav.LINE_CODE,
+                                    stationCode = fav.STATION_CODE
+                                )
+                            )
+                        }
+                    )
+                }
+                composable(Screen.User.route) { PlaceholderScreen("Usuario") }
             }
         }
     }
-}
+

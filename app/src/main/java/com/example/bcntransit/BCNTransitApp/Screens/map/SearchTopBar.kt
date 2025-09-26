@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SearchTopBar(
     initialQuery: String = "",
-    onSearch: (StationDto, String) -> Unit,
+    onSearch: (String, String, String) -> Unit,
     enabled: Boolean
 ) {
     var query by remember { mutableStateOf(initialQuery) }
@@ -152,27 +152,13 @@ fun SearchTopBar(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable(enabled = enabled) {
-
                                         query = station.station_name
                                         active = false
                                         stations = emptyList()
 
-                                        var apiService: ApiService? = null
-
-                                        when (station.type) {
-                                            "bus" -> { apiService = ApiClient.busApiService }
-                                            "metro" -> { apiService = ApiClient.metroApiService }
-                                            "rodalies" -> { apiService = ApiClient.rodaliesApiService }
-                                            "fgc" -> { apiService = ApiClient.fgcApiService }
-                                            "tram" -> {  apiService = ApiClient.tramApiService }
-                                        }
-
                                         coroutineScope.launch {
                                             try {
-                                                val fullStation: StationDto? = apiService?.getStationByCode(station.station_code)
-                                                fullStation?.let { stationDto ->
-                                                    onSearch(stationDto, station.line_code ?: "")
-                                                }
+                                                onSearch(station.type, station.line_code ?: "", station.station_code)
                                             } catch (e: Exception) {
                                                 // Manejo de error, mostrar snackbar, log, etc.
                                             }

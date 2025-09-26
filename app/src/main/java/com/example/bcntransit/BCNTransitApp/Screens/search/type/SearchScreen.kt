@@ -9,8 +9,9 @@ import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.data.enums.SearchOption
 
+
 @Composable
-fun SearchScreen(onNavigate: (SearchOption) -> Unit) {
+fun SearchScreen(onTypeSelected: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,7 +34,10 @@ fun SearchScreen(onNavigate: (SearchOption) -> Unit) {
                 iconRes = item.third,
                 title = item.first,
                 description = item.second,
-                onClick = { onNavigate(SearchOption.entries[index]) }
+                onClick = {
+                    val option = SearchOption.entries[index]
+                    onTypeSelected(option.name)
+                }
             )
         }
     }

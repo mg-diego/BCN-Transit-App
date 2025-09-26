@@ -1,12 +1,14 @@
 package com.example.bcntransit.screens.map
 
 import SearchTopBar
+import android.annotation.SuppressLint
 import android.content.Context
-import android.location.Location
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,17 +19,16 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bcntransit.BCNTransitApp.Screens.map.MapViewModel
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.model.BicingStation
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.NearbyStation
-import com.example.bcntransit.model.StationDto
-import kotlinx.coroutines.delay
+import com.example.bcntransit.data.enums.TransportType
+import com.example.bcntransit.model.*
 import kotlinx.coroutines.launch
 import org.maplibre.android.MapLibre
-import org.maplibre.android.annotations.Marker
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -41,235 +42,194 @@ import org.maplibre.android.maps.Style
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    context: Context,
-    onStationSelected: (StationDto, String) -> Unit,
-    onLineSelected: (LineDto) -> Unit
+    onViewLine: (String, String) -> Unit,
+    onViewStation: (String, String, String) -> Unit
 ) {
+    val context = LocalContext.current
+    val viewModel: MapViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            @Suppress("UNCHECKED_CAST")
+            return MapViewModel(context) as T
+        }
+    })
 
     val mapView = rememberMapView(context)
-    val appContext = LocalContext.current
     val scope = rememberCoroutineScope()
-
-    var searchText: String by remember { mutableStateOf("") }
-
-    // Estado para ubicación y estaciones
-    var lastLocation by remember { mutableStateOf<Location?>(null) }
-    var cachedStations by remember { mutableStateOf<List<NearbyStation>>(emptyList()) }
-
-    // Estado para hoja inferior
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    var selectedNearbyStation by remember { mutableStateOf<NearbyStation?>(null) }
-    var selectedStation by remember { mutableStateOf<StationDto?>(null) }
-    var selectedStationConnections by remember { mutableStateOf<List<LineDto>?>(null) }
-    var selectedBicingStation by remember { mutableStateOf<BicingStation?>(null) }
 
-    // Estado de marcadores
-    val markerToStation = remember { mutableStateMapOf<Marker, NearbyStation>() }
-    var lastSelectedMarker by remember { mutableStateOf<Marker?>(null) }
-
-    var isLoadingNearbyStations by remember { mutableStateOf(false) }
-    var isLoadingConnections by remember { mutableStateOf(false) }
-
-    /**
-     * Cuando cambia la estación seleccionada, pedimos detalles
-     */
-    LaunchedEffect(selectedNearbyStation) {
-        selectedNearbyStation?.let { nearby ->
-            isLoadingConnections = true
-            var apiService: ApiService? = null
-            try {
-                when (selectedNearbyStation!!.type) {
-                    "bus" -> { apiService = ApiClient.busApiService }
-                    "metro" -> { apiService = ApiClient.metroApiService }
-                    "rodalies" -> { apiService = ApiClient.rodaliesApiService }
-                    "fgc" -> { apiService = ApiClient.fgcApiService }
-                    "tram" -> {  apiService = ApiClient.tramApiService }
-                    "bicing" -> { selectedBicingStation = ApiClient.bicingApiService.getBicingStation(nearby.station_code) }
-                }
-
-                selectedStation = apiService?.getStationByCode(nearby.station_code)
-                selectedStationConnections = apiService?.getStationConnections(nearby.station_code)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                isLoadingConnections = false
-            }
-        }
-    }
-
-    /**
-     * Configuración inicial del mapa y carga de estaciones cercanas
-     */
-    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    val userLocation by remember { viewModel::userLocation }
+    val nearbyStations by remember { viewModel::nearbyStations }
+    val selectedNearbyStation by remember { viewModel::selectedNearbyStation }
+    val selectedStation by remember { viewModel::selectedStation }
+    val selectedStationConnections by remember { viewModel::selectedStationConnections }
+    val selectedBicingStation by remember { viewModel::selectedBicingStation }
+    val isLoadingNearbyStations by remember { viewModel::isLoadingNearbyStations }
+    val isLoadingConnections by remember { viewModel::isLoadingConnections }
 
     LaunchedEffect(Unit) {
-        // Lanzamos un bucle para actualizar la ubicación periódicamente
-        while (true) {
-            val newLocation = getUserLocation(appContext)
-            if (newLocation != null) {
-                userLocation = newLocation
-            }
-            delay(5000) // cada 5 segundos, ajusta según necesidad
-        }
-    }
+        mapView.getMapAsync { map ->
+            map.setOnMarkerClickListener { marker ->
+                viewModel.getStationForMarker(marker)?.let { station ->
 
-    // Efecto que se dispara cada vez que la ubicación cambia
-    LaunchedEffect(userLocation) {
-        val latLng = userLocation ?: return@LaunchedEffect
+                    if (viewModel.lastSelectedMarker != null &&
+                        viewModel.lastSelectedMarker != marker
+                    ) {
+                        viewModel.getStationForMarker(viewModel.lastSelectedMarker!!)?.let { prevStation ->
+                            val prevSize = markerSize(prevStation.type)
+                            val prevDrawable = context.resources.getIdentifier(
+                                prevStation.type.lowercase(), "drawable", context.packageName
+                            )
+                            viewModel.lastSelectedMarker!!.setIcon(
+                                getMarkerIcon(context, prevDrawable, sizePx = prevSize)
+                            )
+                        }
+                    }
 
-        val currentLoc = Location("current").apply {
-            latitude = latLng.latitude
-            longitude = latLng.longitude
-        }
+                    viewModel.selectNearbyStation(
+                        station,
+                        ApiClient.from(TransportType.from(station.type))
+                    )
+                    val baseSize = markerSize(station.type)
+                    val selectedDrawable = context.resources.getIdentifier(
+                        station.type.lowercase(), "drawable", context.packageName
+                    )
+                    marker.setIcon(getMarkerIcon(context, selectedDrawable, sizePx = baseSize * 2))
+                    viewModel.setLastSelectedMarker(marker)
 
-        val needUpdate = lastLocation?.let { old ->
-            val results = FloatArray(1)
-            Location.distanceBetween(
-                old.latitude, old.longitude,
-                currentLoc.latitude, currentLoc.longitude,
-                results
-            )
-            results[0] > 100f
-        } ?: true
-
-
-        if (needUpdate || cachedStations.isEmpty()) {
-            if (selectedNearbyStation == null) {
-                mapView.getMapAsync { map ->
-                    // Cámara inicial o animada
-                    map.cameraPosition = CameraPosition.Builder()
-                        .target(latLng)
+                    val cameraPosition = CameraPosition.Builder()
+                        .target(marker.position.withOffset(-0.001))
                         .zoom(16.0)
                         .build()
-                }
-            }
 
-            isLoadingNearbyStations = true
-            cachedStations = getNearbyStations(latLng.latitude, latLng.longitude, 0.5)
-            isLoadingNearbyStations = false
-            lastLocation = currentLoc
-
-            // Pintar marcadores
-            mapView.getMapAsync { map ->
-                map.clear()
-                markerToStation.clear()
-
-                cachedStations.forEach { station ->
-                    val coords = LatLng(station.coordinates[0], station.coordinates[1])
-                    val drawableId = appContext.resources.getIdentifier(
-                        station.type.lowercase(),
-                        "drawable",
-                        appContext.packageName
+                    map.animateCamera(
+                        CameraUpdateFactory.newCameraPosition(cameraPosition),
+                        1000,
+                        null
                     )
-                    val sizePx = markerSize(station.type)
-                    val marker = map.addMarker(
-                        MarkerOptions()
-                            .position(coords)
-                            .title(station.station_name)
-                            .icon(getMarkerIcon(appContext, drawableId, sizePx = sizePx))
-                    )
-                    markerToStation[marker] = station
-                }
 
-                map.setOnMarkerClickListener { marker ->
-                    markerToStation[marker]?.let { st ->
-                        lastSelectedMarker?.let { previous ->
-                            markerToStation[previous]?.let { prevStation ->
-                                val prevSize = markerSize(prevStation.type)
-                                val prevDrawable = appContext.resources.getIdentifier(
-                                    prevStation.type.lowercase(),
-                                    "drawable",
-                                    appContext.packageName
-                                )
-                                previous.setIcon(getMarkerIcon(appContext, prevDrawable, sizePx = prevSize))
-                            }
-                        }
-
-                        selectedNearbyStation = st
-                        val baseSize = markerSize(st.type)
-                        val selectedDrawable = appContext.resources.getIdentifier(
-                            st.type.lowercase(),
-                            "drawable",
-                            appContext.packageName
-                        )
-                        marker.setIcon(getMarkerIcon(appContext, selectedDrawable, sizePx = baseSize * 2))
-                        lastSelectedMarker = marker
-
-                        val cameraPosition = CameraPosition.Builder()
-                            .target(marker.position.withOffset(-0.0005 ))
-                            .zoom(17.0)
-                            .build()
-                        map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
-
-                        scope.launch { sheetState.show() }
-                        true
-                    } ?: false
-                }
+                    scope.launch { sheetState.show() }
+                    true
+                } ?: false
             }
         }
     }
 
-    // UI principal
+    LaunchedEffect(userLocation) {
+        mapView.getMapAsync { map ->
+            userLocation?.let { latLng ->
+                val cameraPosition = CameraPosition.Builder()
+                    .target(latLng)
+                    .zoom(16.0)
+                    .build()
+                map.cameraPosition = cameraPosition
+            }
+        }
+    }
+
+    LaunchedEffect(nearbyStations) {
+        mapView.getMapAsync { map ->
+            nearbyStations.forEach { station ->
+                val coords = LatLng(station.coordinates[0], station.coordinates[1])
+                val drawableId = context.resources.getIdentifier(
+                    station.type.lowercase(), "drawable", context.packageName
+                )
+                val sizePx = markerSize(station.type)
+                val marker = map.addMarker(
+                    MarkerOptions()
+                        .position(coords)
+                        .icon(getMarkerIcon(context, drawableId, sizePx))
+                )
+                viewModel.registerMarker(marker, station)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+
         SearchTopBar(
-            initialQuery = searchText,
-            onSearch = onStationSelected,
+            initialQuery = "",
+            onSearch = onViewStation,
             enabled = !isLoadingNearbyStations
         )
 
         if (isLoadingNearbyStations) {
-            Box(
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = colorResource(R.color.medium_red))
+            }
+        }
+
+        userLocation?.let { location ->
+            FloatingActionButton(
+                onClick = {
+                    mapView.getMapAsync { map ->
+                        userLocation?.let { latLng ->
+                            val cameraPosition = CameraPosition.Builder()
+                                .target(latLng)
+                                .zoom(16.0)
+                                .build()
+
+                            val durationMs = 1000L
+
+                            map.animateCamera(
+                                CameraUpdateFactory.newCameraPosition(cameraPosition),
+                                durationMs.toInt(),
+                                null
+                            )
+                        }
+                    }
+                },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally){
-                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
-                }
+                Icon(
+                    imageVector = Icons.Default.MyLocation,
+                    contentDescription = "Centrar en ubicación"
+                )
             }
         }
     }
 
-    // Hoja inferior con datos
-    selectedNearbyStation?.let {
+    selectedNearbyStation?.let { nearby ->
         ModalBottomSheet(
             sheetState = sheetState,
             onDismissRequest = {
-                scope.launch { sheetState.hide() }
-                selectedNearbyStation = null
-                selectedStation = null
-                selectedBicingStation = null
-                // Restaurar icono original
-                lastSelectedMarker?.let { previous ->
-                    markerToStation[previous]?.let { prevStation ->
-                        val size = markerSize(prevStation.type)
-                        val drawableId = appContext.resources.getIdentifier(
-                            prevStation.type.lowercase(),
-                            "drawable",
-                            appContext.packageName
+                viewModel.lastSelectedMarker?.let { prev ->
+                    viewModel.getStationForMarker(prev)?.let { prevStation ->
+                        val prevSize = markerSize(prevStation.type)
+                        val prevDrawable = context.resources.getIdentifier(
+                            prevStation.type.lowercase(), "drawable", context.packageName
                         )
-                        previous.setIcon(getMarkerIcon(appContext, drawableId, sizePx = size))
+                        prev.setIcon(getMarkerIcon(context, prevDrawable, sizePx = prevSize))
                     }
                 }
+                scope.launch { sheetState.hide() }
+                viewModel.clearSelection()
             },
             scrimColor = Color.Transparent,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight()
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
         ) {
             BottomSheetContent(
-                selectedNearbyStation!!,
+                nearby,
                 selectedStation,
                 selectedBicingStation,
                 selectedStationConnections,
-                onStationSelected,
-                onLineSelected,
-                isLoadingConnections
+                isLoadingConnections,
+                onViewLine,
+                onViewStation,
+                viewModel,
+                sheetState
             )
         }
     }
 }
 
-/** Tamaño del icono según tipo */
 private fun markerSize(type: String): Int =
     when (type.lowercase()) {
         "metro" -> 100
@@ -280,24 +240,30 @@ private fun markerSize(type: String): Int =
         else -> 50
     }
 
+@SuppressLint("CoroutineCreationDuringComposition")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BottomSheetContent(
     selectedNearbyStation: NearbyStation,
     selectedStation: StationDto?,
     selectedBicingStation: BicingStation?,
     selectedStationConnections: List<LineDto>?,
-    onStationSelected: (StationDto, String) -> Unit,
-    onLineSelected: (LineDto) -> Unit,
-    isLoadingConnections: Boolean = false
+    isLoadingConnections: Boolean = false,
+    onViewLine: (String, String) -> Unit,
+    onViewStation: (String, String, String) -> Unit,
+    viewModel: MapViewModel,
+    sheetState: SheetState
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())   // ✅
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        val scope = rememberCoroutineScope()
         val context = LocalContext.current
+        var isLoadingSelectedConnection by remember { mutableStateOf(false) }
         val drawableId = remember(selectedNearbyStation.line_name) {
             context.resources.getIdentifier(
                 selectedNearbyStation.type,
@@ -316,7 +282,10 @@ private fun BottomSheetContent(
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
-                    Text(text = selectedNearbyStation.station_name, style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        text = selectedNearbyStation.station_name,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
                     Text(
                         text = "(${selectedNearbyStation.station_code})",
                         style = MaterialTheme.typography.labelMedium,
@@ -326,7 +295,7 @@ private fun BottomSheetContent(
             }
             Spacer(modifier = Modifier.width(10.dp))
 
-            if (isLoadingConnections) {
+            if (isLoadingConnections || isLoadingSelectedConnection) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -341,8 +310,8 @@ private fun BottomSheetContent(
                 if (selectedNearbyStation.type == "bicing") {
                     Column(
                         modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
@@ -363,12 +332,21 @@ private fun BottomSheetContent(
 
                             // Detalles de bicis y slots
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}", style = MaterialTheme.typography.bodyMedium)
-                                Text("Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}", style = MaterialTheme.typography.bodyMedium)
-                                Text("Slots libres: ${selectedBicingStation?.slots}", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "Slots libres: ${selectedBicingStation?.slots}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
 
-                            Column{
+                            Column {
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.fillMaxWidth()
@@ -395,8 +373,18 @@ private fun BottomSheetContent(
                 } else {
                     selectedNearbyStation?.let { st ->
                         selectedStation?.let { station ->
-                            val lineas = selectedStationConnections?.filter { it.transport_type.equals(st.type, ignoreCase = true) }
-                            val conexiones = selectedStationConnections?.filter { !it.transport_type.equals(st.type, ignoreCase = true) }
+                            val lineas = selectedStationConnections?.filter {
+                                it.transport_type.equals(
+                                    st.type,
+                                    ignoreCase = true
+                                )
+                            }
+                            val conexiones = selectedStationConnections?.filter {
+                                !it.transport_type.equals(
+                                    st.type,
+                                    ignoreCase = true
+                                )
+                            }
 
                             Column(
                                 modifier = Modifier
@@ -436,14 +424,45 @@ private fun BottomSheetContent(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             val context = LocalContext.current
                                             val drawableName =
-                                                "${connection.transport_type}_${connection.name.lowercase().replace(" ", "_")}"
+                                                "${connection.transport_type}_${
+                                                    connection.name.lowercase().replace(" ", "_")
+                                                }"
                                             val drawableId = remember(connection.name) {
-                                                context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                                                    .takeIf { it != 0 } ?: context.resources.getIdentifier(connection.transport_type, "drawable", context.packageName)
+                                                context.resources.getIdentifier(
+                                                    drawableName,
+                                                    "drawable",
+                                                    context.packageName
+                                                )
+                                                    .takeIf { it != 0 }
+                                                    ?: context.resources.getIdentifier(
+                                                        connection.transport_type,
+                                                        "drawable",
+                                                        context.packageName
+                                                    )
                                             }
 
                                             TextButton(
-                                                onClick = { onStationSelected(selectedStation, connection.code ) }
+                                                onClick = {
+                                                    scope.launch {
+                                                        sheetState.expand()
+                                                    }
+                                                    viewModel.viewModelScope.launch {
+                                                        isLoadingSelectedConnection = true
+                                                        val apiService = ApiClient.from(TransportType.from(connection.transport_type)                                                        )
+                                                        val station =
+                                                            viewModel.fetchSelectedConnection(
+                                                                selectedStation.name,
+                                                                connection.code,
+                                                                apiService
+                                                            )
+                                                        onViewStation(
+                                                            connection.transport_type,
+                                                            connection.code,
+                                                            station?.code ?: ""
+                                                        )
+                                                        isLoadingSelectedConnection = false
+                                                    }
+                                                }
                                             ) {
                                                 Icon(
                                                     painter = painterResource(drawableId),
@@ -460,55 +479,82 @@ private fun BottomSheetContent(
                                             }
                                         }
                                     }
+
                                     Spacer(modifier = Modifier.height(12.dp))
-                                }
 
-                                // --- Conexiones agrupadas por transport_type ---
-                                if (!conexiones.isNullOrEmpty()) {
-                                    Text(
-                                        text = "Conexiones:",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    // Agrupar por tipo de transporte
-                                    val grouped = conexiones.groupBy { it.transport_type.uppercase() }
-
-                                    for ((type, group) in grouped) {
+                                    // --- Conexiones agrupadas por transport_type ---
+                                    if (!conexiones.isNullOrEmpty()) {
                                         Text(
-                                            text = type,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            color = MaterialTheme.colorScheme.primary
+                                            text = "Conexiones:",
+                                            style = MaterialTheme.typography.titleMedium
                                         )
-                                        for (connection in group) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                val context = LocalContext.current
-                                                val drawableName =
-                                                    "${connection.transport_type}_${connection.name.lowercase().replace(" ", "_")}"
-                                                val drawableId = remember(connection.name) {
-                                                    context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                                                        .takeIf { it != 0 } ?: context.resources.getIdentifier(connection.transport_type, "drawable", context.packageName)
-                                                }
 
-                                                TextButton(
-                                                    onClick = { onLineSelected(connection) }
-                                                ) {
+                                        // Agrupar por tipo de transporte
+                                        val grouped =
+                                            conexiones.groupBy { it.transport_type.uppercase() }
 
-                                                    Icon(
-                                                        painter = painterResource(drawableId),
-                                                        contentDescription = null,
-                                                        tint = Color.Unspecified,
-                                                        modifier = Modifier.size(42.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(16.dp))
-                                                    Text(
-                                                        connection.description,
-                                                        style = MaterialTheme.typography.bodyMedium,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
+                                        for ((type, group) in grouped) {
+                                            Text(
+                                                text = type,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            for (connection in group) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    val context = LocalContext.current
+                                                    val drawableName =
+                                                        "${connection.transport_type}_${
+                                                            connection.name.lowercase()
+                                                                .replace(" ", "_")
+                                                        }"
+                                                    val drawableId = remember(connection.name) {
+                                                        context.resources.getIdentifier(
+                                                            drawableName,
+                                                            "drawable",
+                                                            context.packageName
+                                                        )
+                                                            .takeIf { it != 0 }
+                                                            ?: context.resources.getIdentifier(
+                                                                connection.transport_type,
+                                                                "drawable",
+                                                                context.packageName
+                                                            )
+                                                    }
+
+                                                    TextButton(
+                                                        onClick = {
+                                                            scope.launch {
+                                                                sheetState.expand()
+                                                            }
+                                                            viewModel.viewModelScope.launch {
+                                                                isLoadingSelectedConnection = true
+                                                                onViewLine(
+                                                                    connection.transport_type,
+                                                                    connection.code
+                                                                )
+                                                                isLoadingSelectedConnection = false
+                                                            }
+                                                        }
+
+                                                    ) {
+
+                                                        Icon(
+                                                            painter = painterResource(drawableId),
+                                                            contentDescription = null,
+                                                            tint = Color.Unspecified,
+                                                            modifier = Modifier.size(42.dp)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(16.dp))
+                                                        Text(
+                                                            connection.description,
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
                                                 }
                                             }
+                                            Spacer(modifier = Modifier.height(8.dp))
                                         }
-                                        Spacer(modifier = Modifier.height(8.dp))
                                     }
                                 }
                             }
@@ -519,7 +565,6 @@ private fun BottomSheetContent(
         }
     }
 }
-
 
 
 @Composable

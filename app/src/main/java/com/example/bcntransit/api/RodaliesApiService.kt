@@ -21,4 +21,7 @@ interface RodaliesApiService : ApiService {
 
     @GET("rodalies/stations/{stationCode}")
     override suspend fun getStationByCode(@Path("stationCode") stationCode: String): StationDto
+
+    @GET("rodalies/stations/{stationCode}/connections")
+    override suspend fun getStationConnections(@Path("stationCode") stationCode: String): List<LineDto>
 }

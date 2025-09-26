@@ -25,16 +25,12 @@ import com.example.bcntransit.BCNTransitApp.Screens.search.lines.BusLineCard
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.api.ApiService
+import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.StationDto
 
 @Composable
 fun BusLinesScreen(
-    selectedLine: LineDto?,
-    selectedStation: StationDto?,
-    onLineSelected: (LineDto) -> Unit,
-    onStationSelected: (StationDto?) -> Unit,
-    currentUserId: String
+    onLineClick: (LineDto) -> Unit
 ) {
 
     val viewModel: BusLinesViewModel = viewModel(
@@ -42,133 +38,88 @@ fun BusLinesScreen(
     )
     val lines by viewModel.lines.collectAsState()
     val loadingLines by viewModel.loadingLines.collectAsState()
+    val errorLines by viewModel.errorLines.collectAsState()
     val expandedStates by viewModel.expandedStates.collectAsState()
     val context = LocalContext.current
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    LazyColumn {
+        item {
+            // Cabecera con sombra
+            Box(Modifier.fillMaxWidth()) {
+                val drawableId = remember(TransportType.BUS) {
+                    context.resources.getIdentifier(
+                        TransportType.BUS.type,
+                        "drawable",
+                        context.packageName
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(drawableId),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(42.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Text("Líneas", style = MaterialTheme.typography.titleLarge)
+                }
 
-        // ===== LISTADO DE LÍNEAS =====
-        if (selectedLine == null) {
-            if (loadingLines) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.25f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+            }
+        }
+
+        when {
+            loadingLines -> item {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = colorResource(R.color.medium_red))
                 }
-            } else {
+            }
+
+            errorLines != null -> item { Text("Error: $errorLines", color = Color.Red) }
+            else -> {
                 val groupedByCategory = lines.groupBy { viewModel.mapToCustomCategory(it) }
-
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // CABECERA FIJA
-                    HeaderBusLines()
-
-                    // LISTADO SCROLLABLE
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        groupedByCategory.forEach { (category, linesInCategory) ->
-                            item {
-                                CategoryCollapsable(
-                                    category = category,
-                                    isExpanded = expandedStates[category] == true,
-                                    onToggle = { viewModel.toggleCategory(category) }
-                                ) {
-                                    Column(modifier = Modifier.fillMaxWidth()) {
-                                        linesInCategory.forEach { line ->
-                                            BusLineCard(
-                                                line = line,
-                                                onClick = { onLineSelected(line) },
-                                                drawableId = viewModel.mapLineToDrawableId(line, context)
-                                            )
-                                        }
-                                    }
+                groupedByCategory.forEach { (category, linesInCategory) ->
+                    item {
+                        CategoryCollapsable(
+                            category = category,
+                            isExpanded = expandedStates[category] == true,
+                            onToggle = { viewModel.toggleCategory(category) }
+                        ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                linesInCategory.forEach { line ->
+                                    BusLineCard(
+                                        line = line,
+                                        onClick = { onLineClick(line) },
+                                        drawableId = viewModel.mapLineToDrawableId(line, context)
+                                    )
                                 }
                             }
                         }
                     }
                 }
+
             }
         }
-
-        // ===== LISTADO DE ESTACIONES =====
-        else if (selectedLine != null && selectedStation == null) {
-            StationListScreen(
-                line = selectedLine,
-                apiService = viewModel.apiService,
-                onStationClick = { st -> onStationSelected(st) },
-                currentUserId = currentUserId
-            )
-        }
-
-        // ===== RUTAS DE LA ESTACIÓN SELECCIONADA =====
-        if (selectedStation != null) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                // Barra superior con botón de volver
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = { onStationSelected(null) }) {
-                        Text("← Volver")
-                    }
-                }
-
-                RoutesScreen(
-                    station = selectedStation,
-                    lineCode = selectedLine?.code ?: "",
-                    apiService = viewModel.apiService,
-                    onStationSelected = {},
-                    onLineSelected = {}
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun HeaderBusLines() {
-    Box(Modifier.fillMaxWidth()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(8.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.bus),
-                contentDescription = null,
-                tint = Color.Unspecified,
-                modifier = Modifier.size(42.dp)
-            )
-            Spacer(Modifier.width(16.dp))
-            Text("Líneas", style = MaterialTheme.typography.titleLarge)
-        }
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(6.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.25f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
     }
 }
 
@@ -214,6 +165,7 @@ fun CategoryCollapsable(
         }
     }
 }
+
 
 class BusLinesViewModelFactory(
     private val apiService: ApiService

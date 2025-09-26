@@ -6,5 +6,12 @@ enum class TransportType(val type: String) {
     TRAM("tram"),
     RODALIES("rodalies"),
     FGC("fgc"),
-    BICING("bicing")
+    BICING("bicing");
+
+    companion object {
+        fun from(value: String): TransportType {
+            return values().firstOrNull { it.type.equals(value, ignoreCase = true) }
+                ?: throw IllegalArgumentException("Unknown TransportType: $value")
+        }
+    }
 }

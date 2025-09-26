@@ -18,40 +18,46 @@ data class RoutesUiState(
     val error: String? = null
 )
 
-data class ConnectionsUiState(
+data class StationConnectionsUiState(
     val connections: List<LineDto> = emptyList(),
-    val connectionStation: StationDto? = null,
-    val loading: Boolean = false,
-    val error: String? = null
-)
-
-data class ConnectionStationUiState(
-    val connectionStation: StationDto? = null,
     val loading: Boolean = false,
     val error: String? = null
 )
 
 class RoutesViewModel(
     private val apiService: ApiService,
-    private val station: StationDto,
-    private val lineCode: String
+    private val lineCode: String,
+    private val stationCode: String? = null
 ) : ViewModel() {
 
     private val _routesState = MutableStateFlow(RoutesUiState())
-    private val _connectionsState = MutableStateFlow(ConnectionsUiState())
-    private val _connectionStationState = MutableStateFlow(ConnectionStationUiState())
+    private val _stationConnectionState = MutableStateFlow(StationConnectionsUiState())
+    private val _selectedStation = MutableStateFlow<StationDto?>(null)
+
     val routesState: StateFlow<RoutesUiState> = _routesState
-    val connectionsState: StateFlow<ConnectionsUiState> = _connectionsState
-    val connectionStationState: StateFlow<ConnectionStationUiState> = _connectionStationState
+    val stationConnectionsState: StateFlow<StationConnectionsUiState> = _stationConnectionState
+    val selectedStation: StateFlow<StationDto?> = _selectedStation
 
     init {
-        fetchRoutesPeriodically()
-        fetchConnections()
+        viewModelScope.launch {
+            stationCode?.let { code ->
+                try {
+                    val stations = apiService.getStationsByLine(lineCode)
+                    _selectedStation.value = stations.find { it.code == code }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    _selectedStation.value = null
+                }
+            }
+            fetchRoutesPeriodically()
+            fetchConnections()
+        }
     }
 
     private fun fetchRoutesPeriodically() {
         viewModelScope.launch {
             while (true) {
+                val station = _selectedStation.value ?: return@launch
                 _routesState.value = _routesState.value.copy(loading = true, error = null)
                 try {
                     val routes = apiService.getStationRoutes(station.code).let { list ->
@@ -69,30 +75,32 @@ class RoutesViewModel(
 
     fun fetchConnections() {
         viewModelScope.launch {
-            _connectionsState.value = _connectionsState.value.copy(loading = true, error = null)
+            val station = _selectedStation.value ?: return@launch
+            _stationConnectionState.value = _stationConnectionState.value.copy(loading = true, error = null)
             try {
-                val connections = apiService.getStationConnections(station.code).let { list ->
-                    list.filter { it.transport_type == station.transport_type }
-                }
-                _connectionsState.value = ConnectionsUiState(connections = connections, loading = false, connectionStation = null)
+                val connections = apiService.getStationConnections(station.code)
+                    .filter { it.transport_type == station.transport_type }
+                _stationConnectionState.value = StationConnectionsUiState(
+                    connections = connections,
+                    loading = false
+                )
             } catch (e: Exception) {
-                _connectionsState.value = ConnectionsUiState(connections = emptyList(), loading = false, error = e.message,  connectionStation = null)
+                _stationConnectionState.value = StationConnectionsUiState(
+                    connections = emptyList(),
+                    loading = false,
+                    error = e.message
+                )
             }
         }
     }
 
-    fun fetchConnectionStation(connectionLineCode: String) {
-        viewModelScope.launch {
-            _connectionStationState.value = _connectionStationState.value.copy(loading = true, error = null)
-            try {
-                val connectionStation = apiService.getStations().let { list ->
-                    list.filter { it.name == station.name && it.line_code == connectionLineCode }
-                }
-                _connectionStationState.value = ConnectionStationUiState(connectionStation = connectionStation.first(), loading = false)
-            } catch (e: Exception) {
-                _connectionStationState.value = ConnectionStationUiState(loading = false, error = e.message, connectionStation = null)
-            }
+    suspend fun fetchSelectedConnection(connectionLineCode: String): StationDto? {
+        return try {
+            val stations = apiService.getStations()
+            val connectionStation = stations.first { it.name == _selectedStation.value?.name && it.line_code == connectionLineCode }
+            connectionStation
+        } catch (e: Exception) {
+            null
         }
     }
 }
-

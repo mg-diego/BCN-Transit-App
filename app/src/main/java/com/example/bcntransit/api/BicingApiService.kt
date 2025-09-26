@@ -4,7 +4,7 @@ import com.example.bcntransit.model.BicingStation
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-interface BicingApiService {
+interface BicingApiService : ApiService {
     @GET("bicing/stations")
     suspend fun getBicingStations(): List<BicingStation>
 

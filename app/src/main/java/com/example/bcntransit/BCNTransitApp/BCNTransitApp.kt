@@ -59,19 +59,35 @@
                     onTabSelected = { tab ->
                         when (tab) {
                             BottomTab.MAP -> navController.navigate(Screen.Map.route) {
-                                popUpTo(Screen.Map.route) { inclusive = false }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                    saveState = false
+                                }
+                                restoreState = false
                                 launchSingleTop = true
                             }
                             BottomTab.SEARCH -> navController.navigate(Screen.Search.route) {
-                                popUpTo(Screen.Search.route) { inclusive = false }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                    saveState = false
+                                }
+                                restoreState = false
                                 launchSingleTop = true
                             }
                             BottomTab.FAVORITES -> navController.navigate(Screen.Favorites.route) {
-                                popUpTo(Screen.Favorites.route) { inclusive = false }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                    saveState = false
+                                }
+                                restoreState = false
                                 launchSingleTop = true
                             }
                             BottomTab.USER -> navController.navigate(Screen.User.route) {
-                                popUpTo(Screen.User.route) { inclusive = false }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                    saveState = false
+                                }
+                                restoreState = false
                                 launchSingleTop = true
                             }
                         }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.LineDto
+import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -34,7 +35,8 @@ class LineListViewModel(
                 val lines = apiService.getLines().filter { it.transport_type == transportType.type }
                 _uiState.value = LineListUiState(lines = lines, loading = false)
             } catch (e: Exception) {
-                _uiState.value = LineListUiState(lines = emptyList(), loading = false, error = e.message)
+                val apiError = e.toApiError()
+                _uiState.value = LineListUiState(lines = emptyList(), loading = false, error = "(${apiError.code}) ${apiError.userMessage}")
             }
         }
     }

@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bcntransit.BCNTransitApp.Screens.search.lines.BusLineCard
+import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.api.ApiService
@@ -95,7 +96,7 @@ fun BusLinesScreen(
                 }
             }
 
-            errorLines != null -> item { Text("Error: $errorLines", color = Color.Red) }
+            errorLines != null -> item { InlineErrorBanner(errorLines!!) }
             else -> {
                 val groupedByCategory = lines.groupBy { viewModel.mapToCustomCategory(it) }
                 groupedByCategory.forEach { (category, linesInCategory) ->

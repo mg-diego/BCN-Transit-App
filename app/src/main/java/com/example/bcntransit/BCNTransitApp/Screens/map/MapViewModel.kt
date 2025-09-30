@@ -16,6 +16,8 @@ import com.example.bcntransit.screens.map.getUserLocation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.content.Context
+import com.example.bcntransit.model.MarkerInfo
+import org.maplibre.android.annotations.Icon
 import org.maplibre.android.annotations.Marker
 import org.maplibre.android.geometry.LatLng
 import kotlin.math.*
@@ -39,11 +41,11 @@ class MapViewModel(private val context: Context) : ViewModel() {
     var isLoadingConnections by mutableStateOf(false)
         private set
 
-    private var markerToStation = mutableMapOf<Marker, NearbyStation>()
-        private set
+    private var markerToStation = mutableMapOf<Marker, MarkerInfo>()
+    val markerMap = mutableMapOf<String, Marker>()
     var lastSelectedMarker: Marker? = null
         private set
-    private var lastUpdateLocation: LatLng? = null
+    var lastUpdateLocation: LatLng? = null
 
     init { startLocationUpdates() }
 
@@ -52,14 +54,14 @@ class MapViewModel(private val context: Context) : ViewModel() {
             while (true) {
                 val newLocation = getUserLocation(context)
                 if (newLocation != null) {
-                    val shouldUpdate = lastUpdateLocation?.let { prev ->
+                    var shouldUpdate = lastUpdateLocation?.let { prev ->
                         distanceMeters(prev.latitude, prev.longitude,
                             newLocation.latitude, newLocation.longitude) > 100
                     } ?: true
 
                     userLocation = newLocation
 
-                    if (shouldUpdate) {
+                    if (shouldUpdate && !isLoadingNearbyStations) {
                         lastUpdateLocation = newLocation
                         updateNearbyStations()
                     }
@@ -133,11 +135,21 @@ class MapViewModel(private val context: Context) : ViewModel() {
         selectedBicingStation = null
         selectedStationConnections = null
         lastSelectedMarker = null
-       // markerToStation.clear()
     }
 
-    fun registerMarker(marker: Marker, station: NearbyStation) {
-        markerToStation[marker] = station
+    fun registerMarker(
+        stationId: String,
+        marker: Marker,
+        station: NearbyStation,
+        normalIcon: Icon,
+        enlargedIcon: Icon
+    ) {
+        markerMap[stationId] = marker
+        markerToStation[marker] = MarkerInfo(
+            station = station,
+            normalIcon = normalIcon,
+            enlargedIcon = enlargedIcon
+        )
     }
 
     fun getStationForMarker(marker: Marker) = markerToStation[marker]
@@ -157,5 +169,10 @@ class MapViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-
+    override fun onCleared() {
+        super.onCleared()
+        markerMap.clear()
+        markerToStation.clear()
+        lastSelectedMarker = null
+    }
 }

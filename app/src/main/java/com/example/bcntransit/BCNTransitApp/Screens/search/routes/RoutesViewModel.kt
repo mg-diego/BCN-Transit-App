@@ -1,5 +1,9 @@
 package com.example.bcntransit.screens.search
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiService
@@ -7,6 +11,7 @@ import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.RouteDto
 import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +43,7 @@ class RoutesViewModel(
     val stationConnectionsState: StateFlow<StationConnectionsUiState> = _stationConnectionState
     val selectedStation: StateFlow<StationDto?> = _selectedStation
 
+
     init {
         viewModelScope.launch {
             stationCode?.let { code ->
@@ -66,7 +72,8 @@ class RoutesViewModel(
                     }
                     _routesState.value = RoutesUiState(routes = routes, loading = false)
                 } catch (e: Exception) {
-                    _routesState.value = RoutesUiState(routes = emptyList(), loading = false, error = e.message)
+                    val apiError = e.toApiError()
+                    _routesState.value = RoutesUiState(routes = emptyList(), loading = false, error = "(${apiError.code}) ${apiError.userMessage}")
                 }
                 delay(20_000L)
             }
@@ -85,10 +92,11 @@ class RoutesViewModel(
                     loading = false
                 )
             } catch (e: Exception) {
+                val apiError = e.toApiError()
                 _stationConnectionState.value = StationConnectionsUiState(
                     connections = emptyList(),
                     loading = false,
-                    error = e.message
+                    error = "(${apiError.code}) ${apiError.userMessage}"
                 )
             }
         }

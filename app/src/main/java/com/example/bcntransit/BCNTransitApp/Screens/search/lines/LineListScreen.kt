@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
@@ -87,7 +88,7 @@ fun LineListScreen(
             uiState.loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = colorResource(R.color.medium_red))
             }
-            uiState.error != null -> Text("Error: ${uiState.error}", color = Color.Red)
+            uiState.error != null -> { InlineErrorBanner(uiState.error!!) }
             else -> androidx.compose.foundation.lazy.LazyColumn(
                 modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)

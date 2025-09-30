@@ -14,10 +14,7 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
 import org.maplibre.android.annotations.Icon
 import org.maplibre.android.annotations.IconFactory
-import org.maplibre.android.annotations.Marker
-import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.MapLibreMap
 
 fun hasLocationPermission(context: Context): Boolean =
     ContextCompat.checkSelfPermission(
@@ -64,23 +61,10 @@ fun getMapIcon(context: Context, drawableId: Int, sizePx: Int = 80): Icon {
     return IconFactory.getInstance(context).fromBitmap(bitmap)
 }
 
-/**
- * Añade un marcador al mapa con drawable personalizado
- */
-fun addMarkerWithDrawable(
-    context: Context,
-    map: MapLibreMap,
-    position: LatLng,
-    drawableId: Int,
-    title: String,
-    sizePx: Int = 80
-): Marker? {
-    val icon = getMapIcon(context, drawableId, sizePx)
-    val marker = map.addMarker(MarkerOptions()
-        .position(position)
-        .title(title)
-        .icon(icon))
-    return marker
+fun getDrawableIdByTransportType(context: Context, transportType: String): Int {
+    return context.resources.getIdentifier(
+        transportType.lowercase(), "drawable", context.packageName
+    )
 }
 
 fun getMarkerIcon(context: Context, drawableRes: Int, sizePx: Int = 80): Icon {
@@ -109,3 +93,14 @@ fun getMarkerIcon(context: Context, drawableRes: Int, sizePx: Int = 80): Icon {
 fun LatLng.withOffset(latOffset: Double = 0.0, lngOffset: Double = 0.0): LatLng {
     return LatLng(this.latitude + latOffset, this.longitude + lngOffset)
 }
+
+fun getMarkerSize(type: String): Int =
+    when (type.lowercase()) {
+        "metro" -> 90
+        "bus" -> 40
+        "bicing" -> 60
+        "tram" -> 80
+        "rodalies" -> 65
+        "fgc" -> 60
+        else -> 50
+    }

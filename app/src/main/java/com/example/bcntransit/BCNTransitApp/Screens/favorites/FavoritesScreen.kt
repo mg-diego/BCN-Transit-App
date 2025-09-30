@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.api.ApiClient
+import com.example.bcntransit.screens.map.getDrawableIdByTransportType
 import kotlinx.coroutines.launch
 
 @Composable
@@ -163,7 +164,7 @@ fun FavoriteCard(
             val drawableName = "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
             val drawableId = remember(fav.LINE_NAME) {
                 context.resources.getIdentifier(drawableName, "drawable", context.packageName) .takeIf { it != 0 }
-                    ?: context.resources.getIdentifier(fav.TYPE, "drawable", context.packageName)
+                    ?: getDrawableIdByTransportType(context, fav.TYPE)
             }
 
             Icon(

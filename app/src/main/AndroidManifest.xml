@@ -10,6 +10,8 @@
     <!-- Declarar que la app puede usar GPS pero no es obligatorio -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -31,6 +33,16 @@
             </intent-filter>
 
         </activity>
+
+        <receiver android:name=".widget.BcnTransitWidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_bcn_transit_info" />
+        </receiver>
     </application>
 
 </manifest>

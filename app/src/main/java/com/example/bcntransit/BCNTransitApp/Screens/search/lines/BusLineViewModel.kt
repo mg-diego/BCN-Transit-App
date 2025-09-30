@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.LineDto
+import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -37,7 +38,8 @@ class BusLinesViewModel(val apiService: ApiService) : ViewModel() {
                 _loadingLines.value = false
                 initializeExpandedStates(fetchedLines)
             } catch (e: Exception) {
-                _errorLines.value = e.message
+                val apiError = e.toApiError()
+                _errorLines.value = "(${apiError.code}) ${apiError.userMessage}"
                 _loadingLines.value = false
             }
         }

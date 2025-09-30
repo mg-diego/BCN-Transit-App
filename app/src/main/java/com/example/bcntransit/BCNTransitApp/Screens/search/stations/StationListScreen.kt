@@ -18,6 +18,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.StationDto
@@ -112,7 +113,7 @@ fun StationListScreen(
                     contentAlignment = Alignment.Center
                 ) { CircularProgressIndicator(color = colorResource(R.color.medium_red)) }
 
-                uiState.error != null -> Text("Error: ${uiState.error}", color = Color.Red)
+                uiState.error != null -> InlineErrorBanner(uiState.error!!)
 
                 else -> LazyColumn(
                     modifier = Modifier.padding(16.dp),

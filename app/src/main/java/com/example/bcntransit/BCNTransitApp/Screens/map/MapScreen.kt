@@ -28,7 +28,6 @@ import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.*
 import kotlinx.coroutines.launch
-import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -38,6 +37,7 @@ import org.maplibre.android.location.modes.CameraMode
 import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,14 +46,27 @@ fun MapScreen(
     onViewStation: (String, String, String) -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: MapViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return MapViewModel(context) as T
+    val mapKey = remember { System.currentTimeMillis().toString() }
+    val viewModel: MapViewModel = viewModel(
+        key = mapKey,
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return MapViewModel(context) as T
+            }
         }
-    })
-
+    )
     val mapView = rememberMapView(context)
+    DisposableEffect(mapView) {
+        mapView.onStart()
+        mapView.onResume()
+        onDispose {
+            mapView.onPause()
+            mapView.onStop()
+            mapView.onDestroy()
+        }
+    }
+
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
@@ -69,52 +82,50 @@ fun MapScreen(
     LaunchedEffect(Unit) {
         mapView.getMapAsync { map ->
             map.setOnMarkerClickListener { marker ->
-                viewModel.getStationForMarker(marker)?.let { station ->
+                val stationInfo = viewModel.getStationForMarker(marker)
+                if (stationInfo == null) return@setOnMarkerClickListener false
 
-                    if (viewModel.lastSelectedMarker != null &&
-                        viewModel.lastSelectedMarker != marker
-                    ) {
-                        viewModel.getStationForMarker(viewModel.lastSelectedMarker!!)?.let { prevStation ->
-                            val prevSize = markerSize(prevStation.type)
-                            val prevDrawable = context.resources.getIdentifier(
-                                prevStation.type.lowercase(), "drawable", context.packageName
-                            )
-                            viewModel.lastSelectedMarker!!.setIcon(
-                                getMarkerIcon(context, prevDrawable, sizePx = prevSize)
-                            )
+                val station = stationInfo.station
+
+                // --- Restaurar el último marker si era distinto ---
+                viewModel.lastSelectedMarker?.let { last ->
+                    if (last != marker) {
+                        viewModel.getStationForMarker(last)?.let { prev ->
+                            last.setIcon(prev.normalIcon)
                         }
                     }
+                }
 
-                    viewModel.selectNearbyStation(
-                        station,
-                        ApiClient.from(TransportType.from(station.type))
-                    )
-                    val baseSize = markerSize(station.type)
-                    val selectedDrawable = context.resources.getIdentifier(
-                        station.type.lowercase(), "drawable", context.packageName
-                    )
-                    marker.setIcon(getMarkerIcon(context, selectedDrawable, sizePx = baseSize * 2))
-                    viewModel.setLastSelectedMarker(marker)
+                // --- Seleccionar el nuevo marker y agrandarlo ---
+                viewModel.selectNearbyStation(
+                    station,
+                    ApiClient.from(TransportType.from(station.type))
+                )
 
-                    val cameraPosition = CameraPosition.Builder()
-                        .target(marker.position.withOffset(-0.001))
-                        .zoom(16.0)
-                        .build()
+                // Solo cambiamos el icono, no creamos ni borramos marker
+                marker.setIcon(stationInfo.enlargedIcon)
+                viewModel.setLastSelectedMarker(marker)
 
-                    map.animateCamera(
-                        CameraUpdateFactory.newCameraPosition(cameraPosition),
-                        1000,
-                        null
-                    )
+                // --- Animar la cámara ---
+                val cameraPosition = CameraPosition.Builder()
+                    .target(marker.position.withOffset(-0.001))
+                    .zoom(16.0)
+                    .build()
 
-                    scope.launch { sheetState.show() }
-                    true
-                } ?: false
+                map.animateCamera(
+                    CameraUpdateFactory.newCameraPosition(cameraPosition),
+                    1000,
+                    null
+                )
+
+                scope.launch { sheetState.show() }
+                true
             }
         }
     }
 
-    LaunchedEffect(userLocation) {
+
+    LaunchedEffect(viewModel.lastUpdateLocation) {
         mapView.getMapAsync { map ->
             userLocation?.let { latLng ->
                 val cameraPosition = CameraPosition.Builder()
@@ -128,18 +139,39 @@ fun MapScreen(
 
     LaunchedEffect(nearbyStations) {
         mapView.getMapAsync { map ->
+            // Quitar los que ya no están
+            val currentIds = nearbyStations.map { it.station_code }.toSet()
+            viewModel.markerMap.keys
+                .filter { it !in currentIds }
+                .forEach { id ->
+                    viewModel.markerMap[id]?.remove()
+                    viewModel.markerMap.remove(id)
+                }
+
+            // Añadir/actualizar los existentes
             nearbyStations.forEach { station ->
-                val coords = LatLng(station.coordinates[0], station.coordinates[1])
-                val drawableId = context.resources.getIdentifier(
-                    station.type.lowercase(), "drawable", context.packageName
-                )
-                val sizePx = markerSize(station.type)
-                val marker = map.addMarker(
-                    MarkerOptions()
-                        .position(coords)
-                        .icon(getMarkerIcon(context, drawableId, sizePx))
-                )
-                viewModel.registerMarker(marker, station)
+                val existing = viewModel.markerMap[station.station_code]
+                val drawableId = getDrawableIdByTransportType(context, station.type)
+                val sizePx = getMarkerSize(station.type)
+                val normalIcon = getMarkerIcon(context, drawableId, sizePx)
+
+                if (existing == null) {
+                    val marker = map.addMarker(
+                        MarkerOptions()
+                            .position(LatLng(station.coordinates[0], station.coordinates[1]))
+                            .icon(normalIcon)
+                    )
+                    viewModel.registerMarker(
+                        station.station_code,
+                        marker,
+                        station,
+                        normalIcon,
+                        getMarkerIcon(context, drawableId, (sizePx * 1.6f).roundToInt())
+                    )
+                } else {
+                    // opcional: actualiza icono o posición si cambian
+                    existing.setIcon(normalIcon)
+                }
             }
         }
     }
@@ -200,10 +232,8 @@ fun MapScreen(
             onDismissRequest = {
                 viewModel.lastSelectedMarker?.let { prev ->
                     viewModel.getStationForMarker(prev)?.let { prevStation ->
-                        val prevSize = markerSize(prevStation.type)
-                        val prevDrawable = context.resources.getIdentifier(
-                            prevStation.type.lowercase(), "drawable", context.packageName
-                        )
+                        val prevSize = getMarkerSize(prevStation.station.type)
+                        val prevDrawable = getDrawableIdByTransportType(context, prevStation.station.type)
                         prev.setIcon(getMarkerIcon(context, prevDrawable, sizePx = prevSize))
                     }
                 }
@@ -229,16 +259,6 @@ fun MapScreen(
         }
     }
 }
-
-private fun markerSize(type: String): Int =
-    when (type.lowercase()) {
-        "metro" -> 100
-        "bus" -> 40
-        "bicing" -> 60
-        "tram" -> 80
-        "rodalies" -> 80
-        else -> 50
-    }
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -569,44 +589,36 @@ private fun BottomSheetContent(
 
 @Composable
 fun rememberMapView(context: Context): MapView {
-    MapLibre.getInstance(context)
     val mapView = remember {
         MapView(context).apply {
             onCreate(null)
-            getMapAsync { map ->
-                map.setStyle(
-                    Style.Builder().fromUri(
-                        "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-                    )
-                ) { style ->
-                    if (hasLocationPermission(context)) {
-                        val locationComponent = map.locationComponent
-                        val options = LocationComponentActivationOptions.builder(context, style)
-                            .useDefaultLocationEngine(true)
-                            .build()
-                        locationComponent.activateLocationComponent(options)
-                        locationComponent.isLocationComponentEnabled = true
-                        locationComponent.cameraMode = CameraMode.TRACKING
-                        locationComponent.renderMode = RenderMode.COMPASS
-                    }
-                    map.uiSettings.apply {
-                        isScrollGesturesEnabled = true
-                        isZoomGesturesEnabled = true
-                        isRotateGesturesEnabled = false
-                        isTiltGesturesEnabled = false
-                    }
-                }
-            }
         }
     }
 
-    DisposableEffect(mapView) {
-        mapView.onStart()
-        mapView.onResume()
-        onDispose {
-            mapView.onPause()
-            mapView.onStop()
-            mapView.onDestroy()
+    LaunchedEffect(Unit) {
+        mapView.getMapAsync { map ->
+            map.setStyle(
+                Style.Builder().fromUri(
+                    "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+                )
+            ) { style ->
+                if (hasLocationPermission(context)) {
+                    val locationComponent = map.locationComponent
+                    val options = LocationComponentActivationOptions.builder(context, style)
+                        .useDefaultLocationEngine(true)
+                        .build()
+                    locationComponent.activateLocationComponent(options)
+                    locationComponent.isLocationComponentEnabled = true
+                    locationComponent.cameraMode = CameraMode.TRACKING
+                    locationComponent.renderMode = RenderMode.COMPASS
+                }
+                map.uiSettings.apply {
+                    isScrollGesturesEnabled = true
+                    isZoomGesturesEnabled = true
+                    isRotateGesturesEnabled = false
+                    isTiltGesturesEnabled = false
+                }
+            }
         }
     }
 

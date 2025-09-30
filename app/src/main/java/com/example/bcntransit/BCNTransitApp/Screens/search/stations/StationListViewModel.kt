@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.LineDto
 import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -46,11 +47,12 @@ class StationListViewModel(
                     direction = defaultDirection
                 )
             } catch (e: Exception) {
+                val apiError = e.toApiError()
                 _uiState.value = StationListUiState(
                     line = null,
                     stations = emptyList(),
                     loading = false,
-                    error = e.message
+                    error = "(${apiError.code}) ${apiError.userMessage}"
                 )
             }
         }

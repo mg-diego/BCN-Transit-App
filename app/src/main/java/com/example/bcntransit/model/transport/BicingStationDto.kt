@@ -1,6 +1,6 @@
-package com.example.bcntransit.model
+package com.example.bcntransit.model.transport
 
-data class BicingStation(
+data class BicingStationDto(
     val id: String,
     val type: String,
     val latitude: Double,

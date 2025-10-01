@@ -19,29 +19,25 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.example.bcntransit.BCNTransitApp.components.ArrivalCountdown
 import com.example.bcntransit.R
-import com.example.bcntransit.model.RouteDto
-import kotlinx.coroutines.delay
-import remainingTime
+import com.example.bcntransit.model.transport.RouteDto
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 @Composable
 fun RouteCard(route: RouteDto, isLoading: Boolean) {
@@ -87,21 +83,76 @@ fun RouteCard(route: RouteDto, isLoading: Boolean) {
 
                             Spacer(modifier = Modifier.width(12.dp))
                             ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time, index)
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Text(buildString {
-                                if (trip.delay_in_minutes != 0) {
-                                    val symbol = if(trip.delay_in_minutes > 0) "+" else ""
-                                    append(" (${symbol}${trip.delay_in_minutes} min)")
-                                }
-                            }, style = MaterialTheme.typography.bodyLarge,
-                                color = if (trip.delay_in_minutes > 0) colorResource(R.color.medium_red) else colorResource(R.color.dark_green),
-                                fontWeight = FontWeight.Bold
-                            )
 
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(buildString { if (!trip.platform.isNullOrEmpty()) append("Vía: ${trip.platform}") },
                                 style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                        }
+                        if (trip.delay_in_minutes != 0) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 2.dp)
+                            ) {
+                                Spacer(modifier = Modifier.width(48.dp))
+
+                                val formatter = remember {
+                                    SimpleDateFormat("HH:mm", Locale.getDefault())
+                                }
+
+                                val realTime = Date(trip.arrival_time * 1000)
+                                val plannedTime = Date((trip.arrival_time - trip.delay_in_minutes * 60) * 1000)
+
+                                val plannedStr = formatter.format(plannedTime) + "h"
+                                val realStr = formatter.format(realTime) + "h"
+
+                                val delaySign = if (trip.delay_in_minutes > 0) "+" else ""
+                                val delayStr = " ($delaySign${trip.delay_in_minutes} min)"
+
+                                val delayColor = if (trip.delay_in_minutes > 0) {
+                                    colorResource(R.color.medium_red)
+                                } else {
+                                    colorResource(R.color.dark_green)
+                                }
+
+                                Text(
+                                    text = buildAnnotatedString {
+                                        // plannedTime tachado
+                                        withStyle(
+                                            style = SpanStyle(
+                                                textDecoration = TextDecoration.LineThrough,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) {
+                                            append(plannedStr)
+                                        }
+
+                                        append(" → ")
+
+                                        // realTime normal
+                                        withStyle(
+                                            style = SpanStyle(
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                        ) {
+                                            append(realStr)
+                                        }
+
+                                        // delay en color
+                                        withStyle(
+                                            style = SpanStyle(
+                                                color = delayColor
+                                            )
+                                        ) {
+                                            append(delayStr)
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
                     }
                 }
@@ -110,42 +161,4 @@ fun RouteCard(route: RouteDto, isLoading: Boolean) {
     }
 }
 
-@Composable
-fun ArrivalCountdown(arrivalEpochSeconds: Long, index: Int) {
-    var remaining by remember { mutableStateOf(remainingTime(arrivalEpochSeconds)) }
-    var showExactTime by remember { mutableStateOf(false) }
-    var showDate by remember { mutableStateOf(false) }
 
-    LaunchedEffect(arrivalEpochSeconds) {
-        while (true) {
-            val nowMillis = System.currentTimeMillis()
-            val arrivalMillis = arrivalEpochSeconds * 1000
-
-            remaining = remainingTime(arrivalEpochSeconds)
-            showExactTime = arrivalMillis - nowMillis > TimeUnit.HOURS.toMillis(1)
-
-            // comprobar si es el mismo día
-            val nowCal = Calendar.getInstance()
-            val arrivalCal = Calendar.getInstance().apply { timeInMillis = arrivalMillis }
-            showDate = nowCal.get(Calendar.YEAR) != arrivalCal.get(Calendar.YEAR) ||
-                    nowCal.get(Calendar.DAY_OF_YEAR) != arrivalCal.get(Calendar.DAY_OF_YEAR)
-
-            delay(1000)
-        }
-    }
-
-    val displayText = if (showExactTime) {
-        val pattern = if (showDate) "dd/MM HH:mm" else "HH:mm"
-        val formatter = remember(pattern) { SimpleDateFormat(pattern, Locale.getDefault()) }
-        formatter.format(Date(arrivalEpochSeconds * 1000)) + "h"
-    } else {
-        remaining
-    }
-
-    Text(
-        text = displayText,
-        style = if(index == 0) MaterialTheme.typography.titleLarge else MaterialTheme.typography.bodyLarge,
-        fontStyle = if (!showExactTime) FontStyle.Italic else FontStyle.Normal,
-        fontWeight = if (remaining == "Llegando") { FontWeight.Bold } else { FontWeight.Normal }
-    )
-}

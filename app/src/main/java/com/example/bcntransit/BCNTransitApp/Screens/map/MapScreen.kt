@@ -26,7 +26,10 @@ import com.example.bcntransit.BCNTransitApp.Screens.map.MapViewModel
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.*
+import com.example.bcntransit.model.transport.BicingStationDto
+import com.example.bcntransit.model.transport.LineDto
+import com.example.bcntransit.model.transport.NearbyStation
+import com.example.bcntransit.model.transport.StationDto
 import kotlinx.coroutines.launch
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
@@ -151,7 +154,7 @@ fun MapScreen(
             // Añadir/actualizar los existentes
             nearbyStations.forEach { station ->
                 val existing = viewModel.markerMap[station.station_code]
-                val drawableId = getDrawableIdByTransportType(context, station.type)
+                val drawableId = getDrawableIdByName(context, station.type)
                 val sizePx = getMarkerSize(station.type)
                 val normalIcon = getMarkerIcon(context, drawableId, sizePx)
 
@@ -233,7 +236,7 @@ fun MapScreen(
                 viewModel.lastSelectedMarker?.let { prev ->
                     viewModel.getStationForMarker(prev)?.let { prevStation ->
                         val prevSize = getMarkerSize(prevStation.station.type)
-                        val prevDrawable = getDrawableIdByTransportType(context, prevStation.station.type)
+                        val prevDrawable = getDrawableIdByName(context, prevStation.station.type)
                         prev.setIcon(getMarkerIcon(context, prevDrawable, sizePx = prevSize))
                     }
                 }
@@ -266,7 +269,7 @@ fun MapScreen(
 private fun BottomSheetContent(
     selectedNearbyStation: NearbyStation,
     selectedStation: StationDto?,
-    selectedBicingStation: BicingStation?,
+    selectedBicingStation: BicingStationDto?,
     selectedStationConnections: List<LineDto>?,
     isLoadingConnections: Boolean = false,
     onViewLine: (String, String) -> Unit,
@@ -313,7 +316,7 @@ private fun BottomSheetContent(
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             if (isLoadingConnections || isLoadingSelectedConnection) {
                 Row(
@@ -327,7 +330,7 @@ private fun BottomSheetContent(
                 }
 
             } else {
-                if (selectedNearbyStation.type == "bicing") {
+                if (selectedNearbyStation.type == TransportType.BICING.type) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -338,56 +341,38 @@ private fun BottomSheetContent(
                             text = "Disponibilidad:",
                             style = MaterialTheme.typography.titleMedium
                         )
+                        // Disponibilidad: ProgressCircular
+                        val availability = selectedBicingStation?.disponibilidad ?: 0
+                        val availabilityPercent = (availability / 100f).coerceIn(0f, 1f)
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(0.4f)
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Disponibilidad: ProgressCircular
-                            val availability = selectedBicingStation?.disponibilidad ?: 0
-                            val availabilityPercent = (availability / 100f).coerceIn(0f, 1f)
-
-                            // Detalles de bicis y slots
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    "Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "Slots libres: ${selectedBicingStation?.slots}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-
-                            Column {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    CircularProgressIndicator(
-                                        progress = availabilityPercent,
-                                        strokeWidth = 12.dp,
-                                        modifier = Modifier.size(100.dp),
-                                        color = when {
-                                            availability > 70 -> Color(0xFF4CAF50) // verde
-                                            availability > 30 -> Color(0xFFFFC107) // amarillo
-                                            else -> Color(0xFFF44336) // rojo
-                                        }
-                                    )
-                                    Text(
-                                        text = "${availability}%",
-                                        style = MaterialTheme.typography.titleLarge
-                                    )
-                                }
-                            }
+                        // Detalles de bicis y slots
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "   - Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "   - Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "   - Slots libres: ${selectedBicingStation?.slots}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        /*SegmentedProgressBar(
+                            firstCategoryStr = "Slots libres",
+                            firstCategoryValue = selectedBicingStation?.slots!!,
+                            secondCategoryStr = "Bicis Eléctricas",
+                            secondCategoryValue = selectedBicingStation.electrical_bikes,
+                            thirdCategoryStr = "Bicis Mecánicas",
+                            thirdCategoryValue = selectedBicingStation.mechanical_bikes
+                        )*/
                     }
 
                 } else {

@@ -1,6 +1,5 @@
 package com.example.bcntransit.screens.favorites
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.screens.map.getDrawableIdByTransportType
+import com.example.bcntransit.screens.map.getDrawableIdByName
 import kotlinx.coroutines.launch
 
 @Composable
@@ -164,7 +163,7 @@ fun FavoriteCard(
             val drawableName = "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
             val drawableId = remember(fav.LINE_NAME) {
                 context.resources.getIdentifier(drawableName, "drawable", context.packageName) .takeIf { it != 0 }
-                    ?: getDrawableIdByTransportType(context, fav.TYPE)
+                    ?: getDrawableIdByName(context, fav.TYPE)
             }
 
             Icon(

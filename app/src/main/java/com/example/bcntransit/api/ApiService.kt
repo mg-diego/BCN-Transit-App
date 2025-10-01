@@ -1,9 +1,9 @@
 package com.example.bcntransit.api
 
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.RouteDto
-import com.example.bcntransit.model.StationDto
-import retrofit2.http.GET
+import com.example.bcntransit.model.transport.AccessDto
+import com.example.bcntransit.model.transport.LineDto
+import com.example.bcntransit.model.transport.RouteDto
+import com.example.bcntransit.model.transport.StationDto
 
 interface ApiService {
     suspend fun getLines(): List<LineDto>
@@ -12,4 +12,5 @@ interface ApiService {
     suspend fun getStationRoutes(stationCode: String): List<RouteDto>
     suspend fun getStationByCode(stationCode: String): StationDto
     suspend fun getStationConnections(stationCode: String): List<LineDto>
+    suspend fun getStationAccesses(stationCode: String): List<AccessDto>
 }

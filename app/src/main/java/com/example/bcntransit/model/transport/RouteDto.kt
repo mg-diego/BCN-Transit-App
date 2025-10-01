@@ -1,4 +1,4 @@
-package com.example.bcntransit.model
+package com.example.bcntransit.model.transport
 
 
 data class RouteDto(
@@ -7,15 +7,9 @@ data class RouteDto(
     val line_name: String,
     val color: String,
     val destination: String,
-    val next_trips: List<NextTrip>,
+    val next_trips: List<NextTripDto>,
     val name_with_emoji: String,
     val line_id: String,
     val line_code: String
 )
 
-data class NextTrip(
-    val id: String,
-    val arrival_time: Long,
-    val delay_in_minutes: Int,
-    val platform: String
-)

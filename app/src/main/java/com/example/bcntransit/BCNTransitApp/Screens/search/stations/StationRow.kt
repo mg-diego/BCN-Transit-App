@@ -26,7 +26,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.model.transport.StationDto
 import com.example.bcntransit.model.FavoriteDto
 import kotlinx.coroutines.launch
 

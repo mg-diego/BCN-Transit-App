@@ -1,4 +1,4 @@
-package com.example.bcntransit.model
+package com.example.bcntransit.model.transport
 
 data class LineDto(
     val id: String,

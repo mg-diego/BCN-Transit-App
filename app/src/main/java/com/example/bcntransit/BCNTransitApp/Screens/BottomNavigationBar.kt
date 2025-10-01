@@ -27,7 +27,7 @@ fun BottomNavigationBar(
 
             val iconColor: Color = if (isSelected) colorResource(R.color.red)
             else MaterialTheme.colorScheme.onSurfaceVariant
-            val iconSize: Dp = if (isSelected) 36.dp else 24.dp  // tamaño más grande si está seleccionado
+            val iconSize: Dp = if (isSelected) 36.dp else 24.dp
 
             NavigationBarItem(
                 icon = {

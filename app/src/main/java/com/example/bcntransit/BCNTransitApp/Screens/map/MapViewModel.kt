@@ -7,10 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.model.BicingStation
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.NearbyStation
-import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.model.transport.BicingStationDto
+import com.example.bcntransit.model.transport.LineDto
+import com.example.bcntransit.model.transport.NearbyStation
+import com.example.bcntransit.model.transport.StationDto
 import com.example.bcntransit.screens.map.getNearbyStations
 import com.example.bcntransit.screens.map.getUserLocation
 import kotlinx.coroutines.delay
@@ -32,7 +32,7 @@ class MapViewModel(private val context: Context) : ViewModel() {
         private set
     var selectedStation by mutableStateOf<StationDto?>(null)
         private set
-    var selectedBicingStation by mutableStateOf<BicingStation?>(null)
+    var selectedBicingStation by mutableStateOf<BicingStationDto?>(null)
         private set
     var selectedStationConnections by mutableStateOf<List<LineDto>?>(null)
         private set
@@ -162,8 +162,8 @@ class MapViewModel(private val context: Context) : ViewModel() {
         apiService: ApiService?
     ): StationDto? {
         return try {
-            val stations = apiService?.getStations()
-            stations?.first { it.name == stationName && it.line_code == connectionLineCode }
+            val stations = apiService?.getStationsByLine(connectionLineCode)
+            stations?.first { it.name == stationName }
         } catch (e: Exception) {
             null
         }

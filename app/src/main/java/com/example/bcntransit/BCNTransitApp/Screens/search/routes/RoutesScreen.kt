@@ -6,8 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Elevator
 import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Stairs
 import androidx.compose.material3.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
@@ -30,7 +31,7 @@ import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.screens.map.getDrawableIdByTransportType
+import com.example.bcntransit.screens.map.getDrawableIdByName
 import kotlinx.coroutines.launch
 import kotlin.Unit
 
@@ -57,6 +58,7 @@ fun RoutesScreen(
 
     val routesState by viewModel.routesState.collectAsState()
     val connectionsState by viewModel.stationConnectionsState.collectAsState()
+    val accessesState by viewModel.stationAccessesState.collectAsState()
     val selectedStation by viewModel.selectedStation.collectAsState()
     var showFullMap by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -72,7 +74,7 @@ fun RoutesScreen(
     }
 
     val drawableId = remember(selectedStation!!.line_name) {
-        getDrawableIdByTransportType(context, selectedStation!!.transport_type)
+        getDrawableIdByName(context, selectedStation!!.transport_type)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -82,6 +84,7 @@ fun RoutesScreen(
                 transportType = selectedStation!!.transport_type,
                 latitude = selectedStation!!.latitude,
                 longitude = selectedStation!!.longitude,
+                accesses = accessesState.accesses,
                 onDismiss = { showFullMap = false }
             )
         }
@@ -186,7 +189,7 @@ fun RoutesScreen(
                                 "${connection.transport_type}_${connection.name.lowercase().replace(" ", "_")}"
                             val drawableId = remember(connection.name) {
                                 context.resources.getIdentifier(drawableName, "drawable", context.packageName)
-                                    .takeIf { it != 0 } ?: getDrawableIdByTransportType(context, connection.transport_type)
+                                    .takeIf { it != 0 } ?: getDrawableIdByName(context, connection.transport_type)
                             }
 
                             TextButton(
@@ -233,6 +236,7 @@ fun RoutesScreen(
                             transportType = station.transport_type,
                             latitude = station.latitude,
                             longitude = station.longitude,
+                            accesses = accessesState.accesses,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
@@ -248,6 +252,31 @@ fun RoutesScreen(
                                 imageVector = Icons.Filled.OpenInFull,
                                 contentDescription = "Abrir mapa"
                             )
+                        }
+                    }
+                }
+                if (accessesState.loading) {
+                    item { CircularProgressIndicator(modifier = Modifier.padding(16.dp), color = colorResource(R.color.medium_red)) }
+                } else if (accessesState.error != null) {
+                    item { InlineErrorBanner(accessesState.error!!) }
+                    } else {
+                    items(accessesState.accesses) { access ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(
+                                onClick = {},
+                                enabled = selectedStation!!.transport_type != TransportType.BUS.type
+                            ) {
+                                Icon(
+                                    imageVector = if (access.number_of_elevators > 0) Icons.Default.Elevator else Icons.Default.Stairs,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    access.name,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

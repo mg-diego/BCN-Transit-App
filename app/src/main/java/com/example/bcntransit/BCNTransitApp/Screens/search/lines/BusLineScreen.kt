@@ -1,13 +1,8 @@
 package com.example.bcntransit.screens.search
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,12 +17,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.bcntransit.BCNTransitApp.Screens.search.lines.BusLineCard
+import com.example.bcntransit.BCNTransitApp.components.CategoryCollapsable
 import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.LineDto
+import com.example.bcntransit.model.transport.LineDto
 
 @Composable
 fun BusLinesScreen(
@@ -119,49 +115,6 @@ fun BusLinesScreen(
                     }
                 }
 
-            }
-        }
-    }
-}
-
-@Composable
-fun CategoryCollapsable(
-    category: String,
-    isExpanded: Boolean,
-    onToggle: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 1.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(6.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        onClick = onToggle
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = category,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            AnimatedVisibility(visible = isExpanded) {
-                Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                    content()
-                }
             }
         }
     }

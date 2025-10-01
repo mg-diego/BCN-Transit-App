@@ -3,8 +3,8 @@ package com.example.bcntransit.screens.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.model.transport.LineDto
+import com.example.bcntransit.model.transport.StationDto
 import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

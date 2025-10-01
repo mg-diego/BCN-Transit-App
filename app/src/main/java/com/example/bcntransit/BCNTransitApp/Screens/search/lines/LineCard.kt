@@ -19,7 +19,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
-import com.example.bcntransit.model.LineDto
+import com.example.bcntransit.model.transport.LineDto
 
 @Composable
 fun LineCard(line: LineDto, onClick: () -> Unit) {

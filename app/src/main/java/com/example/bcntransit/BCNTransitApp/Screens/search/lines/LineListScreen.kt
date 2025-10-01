@@ -23,7 +23,7 @@ import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
 
-import com.example.bcntransit.model.LineDto
+import com.example.bcntransit.model.transport.LineDto
 
 @Composable
 fun LineListScreen(

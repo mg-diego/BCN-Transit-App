@@ -1,16 +1,13 @@
 package com.example.bcntransit.screens.search
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.LineDto
-import com.example.bcntransit.model.RouteDto
-import com.example.bcntransit.model.StationDto
+import com.example.bcntransit.model.transport.AccessDto
+import com.example.bcntransit.model.transport.LineDto
+import com.example.bcntransit.model.transport.RouteDto
+import com.example.bcntransit.model.transport.StationDto
 import com.example.bcntransit.util.toApiError
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +26,12 @@ data class StationConnectionsUiState(
     val error: String? = null
 )
 
+data class StationAccessesUiState(
+    val accesses: List<AccessDto> = emptyList(),
+    val loading: Boolean = false,
+    val error: String? = null
+)
+
 class RoutesViewModel(
     private val apiService: ApiService,
     private val lineCode: String,
@@ -37,10 +40,12 @@ class RoutesViewModel(
 
     private val _routesState = MutableStateFlow(RoutesUiState())
     private val _stationConnectionState = MutableStateFlow(StationConnectionsUiState())
+    private val _stationAccessesState = MutableStateFlow(StationAccessesUiState())
     private val _selectedStation = MutableStateFlow<StationDto?>(null)
 
     val routesState: StateFlow<RoutesUiState> = _routesState
     val stationConnectionsState: StateFlow<StationConnectionsUiState> = _stationConnectionState
+    val stationAccessesState: StateFlow<StationAccessesUiState> = _stationAccessesState
     val selectedStation: StateFlow<StationDto?> = _selectedStation
 
 
@@ -57,6 +62,7 @@ class RoutesViewModel(
             }
             fetchRoutesPeriodically()
             fetchConnections()
+            fetchAccesses()
         }
     }
 
@@ -102,10 +108,31 @@ class RoutesViewModel(
         }
     }
 
+    fun fetchAccesses() {
+        viewModelScope.launch {
+            val station = _selectedStation.value ?: return@launch
+            _stationAccessesState.value = _stationAccessesState.value.copy(loading = true, error = null)
+            try {
+                val accesses = apiService.getStationAccesses(station.code)
+                _stationAccessesState.value = StationAccessesUiState(
+                    accesses = accesses,
+                    loading = false
+                )
+            } catch (e: Exception) {
+                val apiError = e.toApiError()
+                _stationAccessesState.value = StationAccessesUiState(
+                    accesses = emptyList(),
+                    loading = false,
+                    error = "(${apiError.code}) ${apiError.userMessage}"
+                )
+            }
+        }
+    }
+
     suspend fun fetchSelectedConnection(connectionLineCode: String): StationDto? {
         return try {
-            val stations = apiService.getStations()
-            val connectionStation = stations.first { it.name == _selectedStation.value?.name && it.line_code == connectionLineCode }
+            val stations = apiService.getStationsByLine(connectionLineCode)
+            val connectionStation = stations.first { it.name == _selectedStation.value?.name}
             connectionStation
         } catch (e: Exception) {
             null

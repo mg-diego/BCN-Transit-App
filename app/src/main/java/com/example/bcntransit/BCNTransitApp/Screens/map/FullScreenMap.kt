@@ -15,96 +15,82 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.bcntransit.screens.map.rememberMapView
-import org.maplibre.android.annotations.MarkerOptions
-import org.maplibre.android.camera.CameraPosition
-import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.Style
 import androidx.compose.material3.*
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.bcntransit.screens.map.getDrawableIdByTransportType
-import com.example.bcntransit.screens.map.getMarkerIcon
-import com.example.bcntransit.screens.map.getMarkerSize
-import org.maplibre.android.maps.MapView
+import com.example.bcntransit.model.transport.AccessDto
+import com.example.bcntransit.screens.map.addMarker
+import com.example.bcntransit.screens.map.configureMapStyle
+import com.example.bcntransit.screens.map.rememberMapViewWithLifecycle
 
 @Composable
 fun FullScreenMap(
     transportType: String,
     latitude: Double,
     longitude: Double,
+    accesses: List<AccessDto>,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    // CAMBIO: Crear instancia única sin depender de función externa
-    val mapView = remember {
-        MapView(context).apply {
-            onCreate(null)
-        }
-    }
-
-    DisposableEffect(Unit) {
-        mapView.onStart()
-        mapView.onResume()
-        onDispose {
-            mapView.onPause()
-            mapView.onStop()
-            mapView.onDestroy()
-        }
-    }
-
+    val mapView = rememberMapViewWithLifecycle(context)
     var showDirectionsPopup by remember { mutableStateOf(false) }
+    var selectedMarkerLatitude by remember { mutableStateOf(0.0) }
+    var selectedMarkerLongitude by remember { mutableStateOf(0.0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { mapView },
             modifier = Modifier.fillMaxSize(),
             update = { view ->
-                // CAMBIO: Mover lógica a update
                 view.getMapAsync { map ->
-                    map.setStyle(
-                        Style.Builder().fromUri("https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json")
-                    ) { style ->
-                        // CAMBIO: usar map.clear() en lugar de annotations.clear()
+                    configureMapStyle(
+                        context = context,
+                        map = map,
+                        enableLocationComponent = false,
+                        scrollEnabled = true,
+                        zoomEnabled = true
+                    ) {
                         map.clear()
+                        val accessesMarkers = mutableListOf<org.maplibre.android.annotations.Marker>()
 
-                        val prevDrawable = getDrawableIdByTransportType(context, transportType)
-                        val stationLatLng = LatLng(latitude, longitude)
-                        val marker = map.addMarker(
-                            MarkerOptions()
-                                .position(stationLatLng)
-                                .setIcon(getMarkerIcon(context, prevDrawable, sizePx = getMarkerSize(transportType) * 2))
-                        )
-
-                        // Click listener del marker
-                        map.setOnMarkerClickListener { clickedMarker ->
-                            if (clickedMarker == marker) {
-                                showDirectionsPopup = true
-                                true
-                            } else false
+                        for (access in accesses) {
+                            val marker = addMarker(
+                                context = context,
+                                map = map,
+                                iconName = if (access.number_of_elevators > 0) "elevator" else "stairs",
+                                latitude = access.latitude,
+                                longitude = access.longitude,
+                                markerSizeMultiplier = 1.5f,
+                                zoom = 16.0
+                            )
+                            marker.let { accessesMarkers.add(it) }
                         }
 
-                        val cameraPosition = CameraPosition.Builder()
-                            .target(stationLatLng)
-                            .zoom(16.0)
-                            .build()
-                        map.cameraPosition = cameraPosition
+                        val marker = addMarker(
+                            context = context,
+                            map = map,
+                            iconName = transportType,
+                            latitude = latitude,
+                            longitude = longitude,
+                            markerSizeMultiplier = 2f,
+                            zoom = 16.0
+                        )
 
-                        map.uiSettings.apply {
-                            isScrollGesturesEnabled = true
-                            isZoomGesturesEnabled = true
-                            isRotateGesturesEnabled = false
-                            isTiltGesturesEnabled = false
+                        map.setOnMarkerClickListener { clickedMarker ->
+                            if (clickedMarker == marker || clickedMarker in accessesMarkers) {
+                                showDirectionsPopup = true
+                                selectedMarkerLatitude = clickedMarker.position.latitude
+                                selectedMarkerLongitude = clickedMarker.position.longitude
+                                true
+                            } else false
                         }
                     }
                 }
             }
         )
 
-        // Botón para cerrar mapa
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
@@ -118,7 +104,6 @@ fun FullScreenMap(
             )
         }
 
-        // Popup de "Cómo llegar"
         if (showDirectionsPopup) {
             AlertDialog(
                 onDismissRequest = { showDirectionsPopup = false },
@@ -129,10 +114,10 @@ fun FullScreenMap(
                 tonalElevation = 8.dp,
                 modifier = Modifier.padding(8.dp),
                 title = { Text("Cómo llegar", style = MaterialTheme.typography.titleMedium) },
-                text = { Text("Abrir Google Maps con la ruta hacia la estación.") },
+                text = { Text("¿Abrir Google Maps con la ruta?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        val uri = "https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude"
+                        val uri = "https://www.google.com/maps/dir/?api=1&destination=$selectedMarkerLatitude,$selectedMarkerLongitude"
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                             data = android.net.Uri.parse(uri)
                             setPackage("com.google.android.apps.maps")

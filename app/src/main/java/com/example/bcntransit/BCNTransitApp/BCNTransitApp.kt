@@ -7,8 +7,8 @@
     import androidx.compose.ui.platform.LocalContext
     import com.example.bcntransit.api.ApiClient
     import com.example.bcntransit.data.enums.BottomTab
-    import com.example.bcntransit.model.LineDto
-    import com.example.bcntransit.model.StationDto
+    import com.example.bcntransit.model.transport.LineDto
+    import com.example.bcntransit.model.transport.StationDto
     import com.example.bcntransit.screens.BottomNavigationBar
     import com.example.bcntransit.screens.PlaceholderScreen
     import com.example.bcntransit.screens.map.MapScreen
@@ -31,6 +31,7 @@
     import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
     import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
     import com.example.bcntransit.screens.search.StationListScreen
+    import com.example.bcntransit.screens.search.stations.BicingScreen
 
     @Composable
     fun BCNTransitApp() {
@@ -137,6 +138,8 @@
                                 Screen.SearchLine.viewLine(typeArg, line.code)
                             )
                         })
+                    } else if (transportType == TransportType.BICING){
+                        BicingScreen()
                     } else {
                         LineListScreen(
                             transportType = transportType,
@@ -212,7 +215,8 @@
                         }
                     )
                 }
-                composable(Screen.User.route) { PlaceholderScreen("Usuario") }
+                composable(Screen.User.route) {
+                    PlaceholderScreen("Usuario")}
             }
         }
     }

@@ -58,6 +58,9 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.androidx.ui.text)
     implementation(libs.androidx.runtime)
+    implementation(libs.ui.graphics)
+    implementation(libs.androidx.ui.unit)
+    implementation(libs.foundation)
 
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")

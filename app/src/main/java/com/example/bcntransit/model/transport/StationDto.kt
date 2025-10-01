@@ -1,4 +1,4 @@
-package com.example.bcntransit.model
+package com.example.bcntransit.model.transport
 
 data class StationDto(
     val id: String,
@@ -24,11 +24,3 @@ data class StationDto(
     val connections: List<LineDto>?
 )
 
-data class StationAlertDto(
-    val headerCa: String,
-    val headerEn: String,
-    val headerEs: String,
-    val textCa: String,
-    val textEn: String,
-    val textEs: String
-)

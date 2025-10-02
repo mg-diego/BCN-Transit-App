@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#E8F4F8"
+    android:background="@color/logo_gray"
     android:padding="8dp">
 
     <LinearLayout
@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:background="@color/logo_gray"
         android:padding="5dp">
 
         <ImageView
@@ -32,7 +33,7 @@
             android:text="Catalunya"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:textColor="#000000"
+            android:textColor="@color/logo_white"
             android:paddingStart="8dp" />
 
         <ImageView
@@ -70,254 +71,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Actualizado: 22:46:05h"
-        android:textSize="12sp"
-        android:textColor="#666666"
+        android:textSize="10sp"
+        android:textColor="@color/logo_white"
         android:width="100000dp"
         android:textAlignment="textEnd" />
-
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp">
-
-        <ImageView
-            android:id="@+id/img_line_id_1"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/metro_l1"
-            android:contentDescription="Información"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_vertical"
-            android:paddingStart="8dp">
-
-            <TextView
-                android:id="@+id/txt_direction_label_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dirección"
-                android:textSize="10sp"
-                android:textColor="#666666" />
-            <TextView
-                android:id="@+id/txt_direction_name_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Fondo"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#000000" />
-
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Contenedor de tiempos de llegada -->
-    <LinearLayout
+        android:background="@drawable/rounded_background"
+        android:clipToOutline="true">
+    <ListView
+        android:id="@+id/list_routes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="10dp">
+        android:divider="@color/divider_color"
+        android:dividerHeight="1dp"
+        android:scrollbars="vertical"/>
 
-        <!-- Primer tren -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/time_badge_background"
-            android:padding="4dp"
-            android:layout_marginEnd="8dp">
-
-            <TextView
-                android:id="@+id/txt_train_number_d1_1"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:text="1"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#1976D2"
-                android:background="@drawable/circle_background"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/txt_time_d1_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1 min 22s"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="#000000"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
-        <!-- Segundo tren -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/time_badge_background"
-            android:padding="4dp">
-
-            <TextView
-                android:id="@+id/txt_train_number_d1_2"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:text="2"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#1976D2"
-                android:background="@drawable/circle_background"
-                android:gravity="center" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginStart="8dp">
-
-                <TextView
-                    android:id="@+id/txt_time_d1_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="5 min 02s"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="#000000" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
+    <TextView
+        android:id="@+id/txt_empty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingBottom="5dp"
-        android:paddingTop="10dp">
-
-        <ImageView
-            android:id="@+id/img_line_id_2"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/metro_l1"
-            android:contentDescription="Información"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_vertical"
-            android:paddingStart="8dp">
-
-            <TextView
-                android:id="@+id/txt_direction_label_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Dirección"
-                android:textSize="10sp"
-                android:textColor="#666666" />
-            <TextView
-                android:id="@+id/txt_direction_name_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hospital de Bellvitge"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="#000000" />
-
-        </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <!-- Primer tren -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/time_badge_background"
-            android:padding="4dp"
-            android:layout_marginEnd="8dp">
-
-            <TextView
-                android:id="@+id/txt_train_number_d2_1"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:text="1"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#1976D2"
-                android:background="@drawable/circle_background"
-                android:gravity="center" />
-
-            <TextView
-                android:id="@+id/txt_time_d2_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="03 min 44s"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:textColor="#000000"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
-        <!-- Segundo tren -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/time_badge_background"
-            android:padding="4dp">
-
-            <TextView
-                android:id="@+id/txt_train_number_d2_2"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:text="2"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="#1976D2"
-                android:background="@drawable/circle_background"
-                android:gravity="center" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginStart="8dp">
-
-                <TextView
-                    android:id="@+id/txt_time_d2_2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="11 min 48s"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="#000000" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
+        android:text="Haz click en 'Refresh' para actualizar"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:gravity="center"
+        android:padding="10dp"
+        android:visibility="gone"/></FrameLayout>
 </LinearLayout>

@@ -52,6 +52,11 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_bcn_transit_info" />
         </receiver>
+
+        <service
+            android:name=".widget.RoutesWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+
     </application>
 
 </manifest>

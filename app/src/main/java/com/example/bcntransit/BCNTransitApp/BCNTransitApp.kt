@@ -193,6 +193,7 @@
                         stationCode = stationCodeParam,
                         lineCode = lineCodeArg,
                         apiService = ApiClient.from(transportType),
+                        currentUserId = androidId,
                         onConnectionClick = { stationCode: String, lineCode: String ->
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)

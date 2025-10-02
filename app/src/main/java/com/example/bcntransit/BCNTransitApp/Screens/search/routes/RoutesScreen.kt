@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Elevator
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.Stairs
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
@@ -29,8 +31,10 @@ import com.example.bcntransit.BCNTransitApp.Screens.map.MiniMap
 import com.example.bcntransit.BCNTransitApp.Screens.search.routes.RouteCard
 import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
 import com.example.bcntransit.R
+import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
+import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.screens.map.getDrawableIdByName
 import kotlinx.coroutines.launch
 import kotlin.Unit
@@ -40,6 +44,7 @@ fun RoutesScreen(
     lineCode: String,
     stationCode: String,
     apiService: ApiService,
+    currentUserId: String,
     onConnectionClick: (String, String) -> Unit
 ) {
     val viewModel: RoutesViewModel = viewModel(
@@ -63,6 +68,10 @@ fun RoutesScreen(
     var showFullMap by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
+    var isFavorite by remember { mutableStateOf(false) }
+    var isLoadingFavorite by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     if (selectedStation == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -71,6 +80,18 @@ fun RoutesScreen(
             CircularProgressIndicator(color = colorResource(R.color.medium_red))
         }
         return
+    } else {
+        LaunchedEffect(selectedStation!!.code, currentUserId) {
+            try {
+                isFavorite = ApiClient.userApiService.userHasFavorite(
+                    userId = currentUserId,
+                    type = selectedStation!!.transport_type,
+                    itemId = selectedStation!!.code
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     val drawableId = remember(selectedStation!!.line_name) {
@@ -127,6 +148,57 @@ fun RoutesScreen(
                                     alertText,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        // Este IconButton quedará pegado al borde derecho
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    if (isFavorite) {
+                                        try {
+                                            isLoadingFavorite = true
+                                            ApiClient.userApiService.deleteUserFavorite(currentUserId, selectedStation!!.transport_type, selectedStation!!.code)
+                                            isFavorite = false
+                                        } catch(e: Exception) {
+                                            e.printStackTrace()
+                                        } finally {
+                                            isLoadingFavorite = false
+                                        }
+                                    } else {
+                                        try {
+                                            isLoadingFavorite = true
+                                            ApiClient.userApiService.addUserFavorite(
+                                                currentUserId,
+                                                favorite = FavoriteDto(
+                                                    USER_ID = currentUserId,
+                                                    TYPE = selectedStation!!.transport_type,
+                                                    LINE_CODE = selectedStation!!.line_code,
+                                                    LINE_NAME = selectedStation!!.line_name,
+                                                    LINE_NAME_WITH_EMOJI = selectedStation!!.line_name_with_emoji ?: "",
+                                                    STATION_CODE = selectedStation!!.code,
+                                                    STATION_NAME = selectedStation!!.name,
+                                                    STATION_GROUP_CODE = selectedStation!!.CODI_GRUP_ESTACIO.toString(),
+                                                    coordinates = listOf(selectedStation!!.latitude, selectedStation!!.longitude)
+                                                )
+                                            )
+                                            isFavorite = true
+                                        } catch(e: Exception) {
+                                            e.printStackTrace()
+                                        } finally {
+                                            isLoadingFavorite = false
+                                        }
+                                    }
+                                }
+                            }
+                        ) {
+                            if (isLoadingFavorite) {
+                                CircularProgressIndicator(color = colorResource(R.color.medium_red))
+                            } else {
+                                Icon(
+                                    imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                                    contentDescription = "Favorito",
+                                    tint = colorResource(R.color.red)
                                 )
                             }
                         }

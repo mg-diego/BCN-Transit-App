@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#E8F4F8"
-    android:padding="16dp">
+    android:padding="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,28 +14,47 @@
         android:gravity="center_vertical"
         android:padding="5dp">
 
+        <ImageView
+            android:id="@+id/img_type"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/metro"
+            android:contentDescription="Información"
+            android:clickable="true"
+            android:focusable="true" />
 
-        <ImageView android:id="@+id/img_line_id" android:layout_width="32dp" android:layout_height="32dp" android:layout_marginStart="8dp" android:src="@drawable/metro_l5" android:contentDescription="Información" android:clickable="true" android:focusable="true"/>
         <TextView
             android:id="@+id/txt_station_name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Badal"
+            android:text="Catalunya"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#000000"
-            android:paddingStart="8dp"/>
+            android:paddingStart="8dp" />
 
         <ImageView
             android:id="@+id/img_refresh"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:layout_marginStart="8dp"
             android:src="@drawable/refresh"
             android:contentDescription="Información"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginStart="8dp" />
+            android:focusable="true" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/red"
+            android:indeterminateTintMode="src_in"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 
     <ImageView
@@ -50,34 +69,63 @@
         android:id="@+id/txt_updated"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Actualizado: 01/10/2025 - 22:46:05h"
+        android:text="Actualizado: 22:46:05h"
         android:textSize="12sp"
         android:textColor="#666666"
         android:width="100000dp"
-        android:textAlignment="textEnd"/>
+        android:textAlignment="textEnd" />
 
-    <TextView
-        android:id="@+id/txt_direction_label_1"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Dirección"
-        android:textSize="12sp"
-        android:textColor="#666666"/>
-    <TextView
-        android:id="@+id/txt_direction_name_1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Vall d'Hebrón"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="#000000" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp">
+
+        <ImageView
+            android:id="@+id/img_line_id_1"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/metro_l1"
+            android:contentDescription="Información"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp">
+
+            <TextView
+                android:id="@+id/txt_direction_label_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dirección"
+                android:textSize="10sp"
+                android:textColor="#666666" />
+            <TextView
+                android:id="@+id/txt_direction_name_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fondo"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+
+        </LinearLayout>
+    </LinearLayout>
 
     <!-- Contenedor de tiempos de llegada -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:paddingBottom="10dp">
 
         <!-- Primer tren -->
         <LinearLayout
@@ -105,7 +153,7 @@
                 android:id="@+id/txt_time_d1_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="01:44"
+                android:text="1 min 22s"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#000000"
@@ -143,7 +191,7 @@
                     android:id="@+id/txt_time_d1_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="5 min"
+                    android:text="5 min 02s"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textColor="#000000" />
@@ -151,22 +199,50 @@
         </LinearLayout>
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/txt_direction_label_2"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Dirección"
-        android:textSize="12sp"
-        android:textColor="#666666"
-        android:paddingTop="18dp"/>
-    <TextView
-        android:id="@+id/txt_direction_name_2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cornellà Centre"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:textColor="#000000" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="5dp"
+        android:paddingTop="10dp">
+
+        <ImageView
+            android:id="@+id/img_line_id_2"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/metro_l1"
+            android:contentDescription="Información"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp">
+
+            <TextView
+                android:id="@+id/txt_direction_label_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dirección"
+                android:textSize="10sp"
+                android:textColor="#666666" />
+            <TextView
+                android:id="@+id/txt_direction_name_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hospital de Bellvitge"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#000000" />
+
+        </LinearLayout>
+    </LinearLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -199,7 +275,7 @@
                 android:id="@+id/txt_time_d2_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="01:44"
+                android:text="03 min 44s"
                 android:textSize="12sp"
                 android:textStyle="bold"
                 android:textColor="#000000"
@@ -237,13 +313,11 @@
                     android:id="@+id/txt_time_d2_2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="5 min"
+                    android:text="11 min 48s"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     android:textColor="#000000" />
             </LinearLayout>
         </LinearLayout>
-
-
     </LinearLayout>
 </LinearLayout>

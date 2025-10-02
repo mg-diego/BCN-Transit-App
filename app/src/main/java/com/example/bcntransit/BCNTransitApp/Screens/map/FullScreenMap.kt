@@ -74,7 +74,7 @@ fun FullScreenMap(
                             iconName = transportType,
                             latitude = latitude,
                             longitude = longitude,
-                            markerSizeMultiplier = 2f,
+                            markerSizeMultiplier = 1.5f,
                             zoom = 16.0
                         )
 

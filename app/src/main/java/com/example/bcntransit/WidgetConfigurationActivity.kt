@@ -3,20 +3,12 @@ package com.example.bcntransit
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.FavoriteDto
@@ -61,6 +53,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun configurarWidget(favorite: FavoriteDto) {
         val context = this
 
@@ -85,9 +78,11 @@ class WidgetConfigurationActivity : ComponentActivity() {
             putString("widget_${appWidgetId}_line_code", favorite.LINE_CODE)
             putString("widget_${appWidgetId}_type", favorite.TYPE)
             putString("widget_${appWidgetId}_direction_1", routes[0].destination)
+            putString("widget_${appWidgetId}_direction_1_line_name", routes[0].line_name)
             putString("widget_${appWidgetId}_direction_1_route_1", direction_1_route_1)
             putString("widget_${appWidgetId}_direction_1_route_2", direction_1_route_2)
             putString("widget_${appWidgetId}_direction_2", routes[1].destination)
+            putString("widget_${appWidgetId}_direction_2_line_name", routes[1].line_name)
             putString("widget_${appWidgetId}_direction_2_route_1", direction_2_route_1)
             putString("widget_${appWidgetId}_direction_2_route_2", direction_2_route_2)
             apply()
@@ -103,10 +98,3 @@ class WidgetConfigurationActivity : ComponentActivity() {
         finish()
     }
 }
-
-
-data class Favorite(
-    val id: String,
-    val stationName: String,
-    val line: String
-)

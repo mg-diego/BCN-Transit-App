@@ -44,7 +44,7 @@ fun MiniMap(
                             iconName = if (access.number_of_elevators > 0) "elevator" else "stairs",
                             latitude = access.latitude,
                             longitude = access.longitude,
-                            zoom = 14.0
+                            zoom = 16.0
                         )
                     }
                     addMarker(
@@ -54,7 +54,7 @@ fun MiniMap(
                         latitude = latitude,
                         longitude = longitude,
                         markerSizeMultiplier = 1f,
-                        zoom = 14.0
+                        zoom = 16.0
                     )
                 }
             }

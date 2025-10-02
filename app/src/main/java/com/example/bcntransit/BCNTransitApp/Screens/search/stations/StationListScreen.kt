@@ -21,13 +21,13 @@ import com.example.bcntransit.R
 import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.model.transport.StationDto
 import com.example.bcntransit.data.enums.TransportType
+import com.example.bcntransit.util.getAndroidId
 
 @Composable
 fun StationListScreen(
     lineCode: String,
     transportType: TransportType,
     apiService: ApiService,
-    currentUserId: String,
     onStationClick: (StationDto) -> Unit
 ) {
     val viewModel: StationListViewModel = viewModel(
@@ -39,7 +39,7 @@ fun StationListScreen(
             }
         }
     )
-
+    val currentUserId = getAndroidId(LocalContext.current)
     val uiState by viewModel.uiState.collectAsState()
 
     uiState.line?.let { line ->

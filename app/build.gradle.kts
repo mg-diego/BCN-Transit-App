@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.androidx.ui.unit)
     implementation(libs.foundation)
+    implementation(libs.ui.text)
 
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")

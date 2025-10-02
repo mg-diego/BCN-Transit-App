@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +37,7 @@ import com.example.bcntransit.api.ApiService
 import com.example.bcntransit.data.enums.TransportType
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.screens.map.getDrawableIdByName
+import com.example.bcntransit.util.getAndroidId
 import kotlinx.coroutines.launch
 import kotlin.Unit
 
@@ -44,7 +46,6 @@ fun RoutesScreen(
     lineCode: String,
     stationCode: String,
     apiService: ApiService,
-    currentUserId: String,
     onConnectionClick: (String, String) -> Unit
 ) {
     val viewModel: RoutesViewModel = viewModel(
@@ -61,6 +62,7 @@ fun RoutesScreen(
         }
     )
 
+    val currentUserId = getAndroidId(LocalContext.current)
     val routesState by viewModel.routesState.collectAsState()
     val connectionsState by viewModel.stationConnectionsState.collectAsState()
     val accessesState by viewModel.stationAccessesState.collectAsState()
@@ -116,8 +118,12 @@ fun RoutesScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // HEADER ESTACIÓN
+                // HEADER ESTACIÓN
                 item {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
                         Icon(
                             painter = painterResource(drawableId),
                             contentDescription = null,
@@ -125,10 +131,16 @@ fun RoutesScreen(
                             modifier = Modifier.size(50.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+
+                        Column(
+                            modifier = Modifier.weight(1f) // ocupa el espacio restante
+                        ) {
+                            // Nombre de la estación en una sola línea
                             Text(
                                 text = selectedStation!!.name,
-                                style = MaterialTheme.typography.headlineMedium
+                                style = MaterialTheme.typography.headlineMedium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -147,20 +159,27 @@ fun RoutesScreen(
                                 Text(
                                     alertText,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
-                        // Este IconButton quedará pegado al borde derecho
+
+                        // Botón SIEMPRE al final de la fila
                         IconButton(
                             onClick = {
                                 scope.launch {
                                     if (isFavorite) {
                                         try {
                                             isLoadingFavorite = true
-                                            ApiClient.userApiService.deleteUserFavorite(currentUserId, selectedStation!!.transport_type, selectedStation!!.code)
+                                            ApiClient.userApiService.deleteUserFavorite(
+                                                currentUserId,
+                                                selectedStation!!.transport_type,
+                                                selectedStation!!.code
+                                            )
                                             isFavorite = false
-                                        } catch(e: Exception) {
+                                        } catch (e: Exception) {
                                             e.printStackTrace()
                                         } finally {
                                             isLoadingFavorite = false
@@ -179,11 +198,14 @@ fun RoutesScreen(
                                                     STATION_CODE = selectedStation!!.code,
                                                     STATION_NAME = selectedStation!!.name,
                                                     STATION_GROUP_CODE = selectedStation!!.CODI_GRUP_ESTACIO.toString(),
-                                                    coordinates = listOf(selectedStation!!.latitude, selectedStation!!.longitude)
+                                                    coordinates = listOf(
+                                                        selectedStation!!.latitude,
+                                                        selectedStation!!.longitude
+                                                    )
                                                 )
                                             )
                                             isFavorite = true
-                                        } catch(e: Exception) {
+                                        } catch (e: Exception) {
                                             e.printStackTrace()
                                         } finally {
                                             isLoadingFavorite = false

@@ -15,18 +15,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.R
 import com.example.bcntransit.model.FavoriteDto
 import com.example.bcntransit.api.ApiClient
 import com.example.bcntransit.screens.map.getDrawableIdByName
+import com.example.bcntransit.util.getAndroidId
 import kotlinx.coroutines.launch
 
 @Composable
 fun FavoritesScreen(
-    currentUserId: String,
     onFavoriteSelected: (FavoriteDto) -> Unit
 ) {
+
+    val currentUserId = getAndroidId(LocalContext.current)
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -134,7 +137,12 @@ fun FavoriteCard(
                         onDelete()
                     }
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(
+                        "Eliminar",
+                        color = MaterialTheme.colorScheme.error,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             },
             dismissButton = {
@@ -148,22 +156,23 @@ fun FavoriteCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .padding(vertical = 4.dp, horizontal = 4.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth()
+                .padding(16.dp)
+                .height(IntrinsicSize.Min), // ajusta la altura al contenido
             verticalAlignment = Alignment.CenterVertically
         ) {
             val context = LocalContext.current
             val drawableName = "${fav.TYPE}_${fav.LINE_NAME?.lowercase()?.replace(" ", "_")}"
             val drawableId = remember(fav.LINE_NAME) {
-                context.resources.getIdentifier(drawableName, "drawable", context.packageName) .takeIf { it != 0 }
-                    ?: getDrawableIdByName(context, fav.TYPE)
+                context.resources.getIdentifier(drawableName, "drawable", context.packageName)
+                    .takeIf { it != 0 } ?: getDrawableIdByName(context, fav.TYPE)
             }
 
             Icon(
@@ -175,15 +184,31 @@ fun FavoriteCard(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
-                Text( fav.STATION_NAME, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text( "${fav.TYPE.uppercase()} (${fav.STATION_CODE})", style = MaterialTheme.typography.bodyMedium, color = colorResource(R.color.gray) )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    fav.STATION_NAME,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    "${fav.TYPE.uppercase()} (${fav.STATION_CODE})",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colorResource(R.color.gray),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
             IconButton(
-                onClick = { showDialog = true }   // ← Abre el diálogo en lugar de borrar directo
+                onClick = { showDialog = true },
+                modifier = Modifier.align(Alignment.CenterVertically) // asegura que el botón esté centrado
             ) {
                 Icon(
                     imageVector = Icons.Filled.Star,

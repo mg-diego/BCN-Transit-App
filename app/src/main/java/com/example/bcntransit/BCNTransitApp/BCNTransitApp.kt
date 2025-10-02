@@ -32,6 +32,7 @@
     import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
     import com.example.bcntransit.screens.search.StationListScreen
     import com.example.bcntransit.screens.search.stations.BicingScreen
+    import com.example.bcntransit.util.getAndroidId
 
     @Composable
     fun BCNTransitApp() {
@@ -49,9 +50,6 @@
             Screen.User.route -> BottomTab.USER
             else -> BottomTab.MAP
         }
-
-        val context = LocalContext.current
-        val androidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
         Scaffold(
             bottomBar = {
@@ -168,7 +166,6 @@
                         lineCode = lineCodeArg,
                         transportType = TransportType.from(typeArg),
                         apiService = ApiClient.from(transportType),
-                        currentUserId = androidId,
                         onStationClick = { station: StationDto ->
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(typeArg, lineCodeArg, station.code)
@@ -193,7 +190,6 @@
                         stationCode = stationCodeParam,
                         lineCode = lineCodeArg,
                         apiService = ApiClient.from(transportType),
-                        currentUserId = androidId,
                         onConnectionClick = { stationCode: String, lineCode: String ->
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)
@@ -204,7 +200,6 @@
 
                 composable(Screen.Favorites.route) {
                     FavoritesScreen(
-                        currentUserId = androidId,
                         onFavoriteSelected = { fav ->
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(

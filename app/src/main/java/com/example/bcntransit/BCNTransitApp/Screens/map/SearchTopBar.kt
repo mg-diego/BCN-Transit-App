@@ -62,6 +62,9 @@ fun SearchTopBar(
             onQueryChange = { if (enabled) query = it },
             onSearch = {},
             active = active,
+            colors = SearchBarDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            ),
             onActiveChange = {
                 if (enabled) {
                     active = it

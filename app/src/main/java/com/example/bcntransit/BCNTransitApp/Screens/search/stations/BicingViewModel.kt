@@ -20,7 +20,7 @@ class BicingViewModel : ViewModel() {
     private val _stations = MutableStateFlow<List<BicingStationDto>>(emptyList())
     val stations: StateFlow<List<BicingStationDto>> = _stations
 
-    private val _selectedFilter = MutableStateFlow("Todos")
+    private val _selectedFilter = MutableStateFlow("Todas")
     val selectedFilter: StateFlow<String> = _selectedFilter
 
     init {

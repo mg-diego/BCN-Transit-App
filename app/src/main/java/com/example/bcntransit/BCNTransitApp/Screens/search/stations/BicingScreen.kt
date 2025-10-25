@@ -1,16 +1,24 @@
 package com.example.bcntransit.screens.search.stations
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bcntransit.BCNTransitApp.Screens.search.stations.BicingViewModel
 import com.example.bcntransit.BCNTransitApp.components.CategoryCollapsable
+import com.example.bcntransit.data.enums.TransportType
 import org.maplibre.android.geometry.LatLng
 import kotlin.math.*
 
@@ -24,6 +32,7 @@ fun BicingScreen() {
 
     // Estado para la ubicación del usuario
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    var viewMode by remember { mutableStateOf("Lista") }
     val context = LocalContext.current
 
     // Obtener ubicación una vez al cargar la pantalla
@@ -69,48 +78,126 @@ fun BicingScreen() {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Filtros
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Todos", "Slots", "Eléctricas", "Mecánicas").forEach { filter ->
-                FilterChip(
-                    selected = selectedFilter == filter,
-                    onClick = { viewModel.setFilter(filter) },
-                    label = { Text(filter) }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row {
+            Box(Modifier.fillMaxWidth()) {
+                val drawableId = remember(TransportType.BUS) {
+                    context.resources.getIdentifier(
+                        TransportType.BICING.type,
+                        "drawable",
+                        context.packageName
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(drawableId),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(42.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Text("Bicing", style = MaterialTheme.typography.titleLarge)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.25f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Paradas disponibles: ${filteredStations.size}")
-
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            stationsByDistance.toSortedMap(compareBy {
-                when (it) {
-                    "< 100m" -> 0
-                    "< 500m" -> 1
-                    "< 1km" -> 2
-                    "> 1km" -> 3
-                    else -> 4
+        Row {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Row {
+                    Text(text = "Filtrar paradas:")
                 }
-            }).forEach { (distanceLabel, stations) ->
-                item {
-                    CategoryCollapsable(
-                        category = "$distanceLabel (${stations.size})",
-                        isExpanded = expandedStates[distanceLabel] == true,
-                        onToggle = {
-                            expandedStates[distanceLabel] =
-                                !(expandedStates[distanceLabel] ?: true)
-                        }
-                    ) {
-                        stations.forEach { station ->
-                            BicingStationItem(station, selectedFilter)
+                // Filtros
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Todas", "Slots", "Eléctricas", "Mecánicas").forEach { filter ->
+                        FilterChip(
+                            selected = selectedFilter == filter,
+                            onClick = { viewModel.setFilter(filter) },
+                            label = { Text(filter) }
+                        )
+                    }
+                }
+
+                Row {
+                    Text(text = "Filtrar paradas:")
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    FilterChip(
+                        selected = viewMode == "Lista",
+                        onClick = { viewMode = "Lista" },
+                        label = { Text("Lista") }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    FilterChip(
+                        selected = viewMode == "Mapa",
+                        onClick = { viewMode = "Mapa" },
+                        label = { Text("Mapa") }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = "Paradas disponibles: ${filteredStations.size}")
+
+                if (viewMode == "Lista") {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        stationsByDistance.toSortedMap(compareBy {
+                            when (it) {
+                                "< 100m" -> 0
+                                "< 500m" -> 1
+                                "< 1km" -> 2
+                                "> 1km" -> 3
+                                else -> 4
+                            }
+                        }).forEach { (distanceLabel, stations) ->
+                            item {
+                                CategoryCollapsable(
+                                    category = "$distanceLabel (${stations.size})",
+                                    isExpanded = expandedStates[distanceLabel] == true,
+                                    onToggle = {
+                                        expandedStates[distanceLabel] =
+                                            !(expandedStates[distanceLabel] ?: true)
+                                    }
+                                ) {
+                                    stations.forEach { station ->
+                                        BicingStationItem(station, selectedFilter)
+                                    }
+                                }
+                            }
                         }
                     }
+                } else {
+                    Text("placeholder map")
                 }
             }
         }

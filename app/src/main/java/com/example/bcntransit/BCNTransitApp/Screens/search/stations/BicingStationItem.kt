@@ -19,8 +19,8 @@ import com.example.bcntransit.model.transport.BicingStationDto
 @Composable
 fun BicingStationItem(station: BicingStationDto, filter: String) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        //elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -35,7 +35,7 @@ fun BicingStationItem(station: BicingStationDto, filter: String) {
             Spacer(modifier = Modifier.height(8.dp))
 
             when (filter) {
-                "Todos" -> {
+                "Todas" -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
                             "   - Bicis eléctricas: ${station.electrical_bikes}",

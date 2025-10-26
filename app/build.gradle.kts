@@ -64,13 +64,13 @@ dependencies {
     implementation(libs.androidx.ui.unit)
     implementation(libs.foundation)
     implementation(libs.ui.text)
+    implementation(libs.androidx.compose.foundation.foundation)
 
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
 
     // Dependencias Compose sin fijar versiones
-    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")

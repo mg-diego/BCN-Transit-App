@@ -49,6 +49,7 @@ import org.maplibre.android.plugins.annotation.SymbolManager
 import org.maplibre.android.plugins.annotation.SymbolOptions
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.compose.material.icons.filled.Refresh
 import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -482,7 +483,7 @@ fun MapScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
-                                .padding(8.dp)
+                                .padding(6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.MyLocation,
@@ -500,11 +501,25 @@ fun MapScreen(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
-                                .padding(8.dp)
+                                .padding(6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.FilterList,
                                 contentDescription = "Filtros adicionales"
+                            )
+                        }
+
+                        FloatingActionButton(
+                            onClick = { viewModel.updateNearbyStations() },
+                            shape = CircleShape,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Actualizar"
                             )
                         }
                     }
@@ -912,11 +927,12 @@ private fun BottomSheetContent(
                             text = "Disponibilidad:",
                             style = MaterialTheme.typography.titleMedium
                         )
-                        // Disponibilidad: ProgressCircular
-                        val availability = selectedBicingStation?.disponibilidad ?: 0
-                        val availabilityPercent = (availability / 100f).coerceIn(0f, 1f)
-
-                        // Detalles de bicis y slots
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "   - Slots libres: ${selectedBicingStation?.slots}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
                                 "   - Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}",
@@ -926,12 +942,6 @@ private fun BottomSheetContent(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(
                                 "   - Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "   - Slots libres: ${selectedBicingStation?.slots}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -967,7 +977,7 @@ private fun BottomSheetContent(
                                             id = selectedStation.line_id,
                                             code = selectedStation.line_code,
                                             name = selectedStation.line_name,
-                                            description = "",
+                                            description = selectedStation.description ?: "",
                                             origin = "",
                                             destination = "",
                                             color = selectedStation.line_color,

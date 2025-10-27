@@ -1,4 +1,4 @@
-package com.example.bcntransit
+package com.bcntransit.app
 
 import android.appwidget.AppWidgetManager
 import android.content.Intent
@@ -7,10 +7,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
-import com.example.bcntransit.model.FavoriteDto
-import com.example.bcntransit.ui.theme.BCNTransitTheme
-import com.example.bcntransit.widget.BcnTransitWidgetProvider
-import com.example.bcntransit.widget.WidgetConfigurationScreen
+import com.bcntransit.app.model.FavoriteDto
+import com.bcntransit.app.ui.theme.BCNTransitTheme
+import com.bcntransit.app.widget.BcnTransitWidgetProvider
+import com.bcntransit.app.widget.WidgetConfigurationScreen
 
 class WidgetConfigurationActivity : ComponentActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID

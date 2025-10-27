@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens
+package com.bcntransit.app.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -9,8 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.R
-import com.example.bcntransit.data.enums.BottomTab
+import com.bcntransit.app.R
+import com.bcntransit.app.data.enums.BottomTab
 
 @Composable
 fun BottomNavigationBar(
@@ -20,7 +20,8 @@ fun BottomNavigationBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        tonalElevation = 8.dp
+        tonalElevation = 8.dp,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     ) {
         BottomTab.values().forEach { tab ->
             val isSelected = tab == selectedTab

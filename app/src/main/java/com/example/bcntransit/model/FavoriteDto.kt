@@ -1,4 +1,4 @@
-package com.example.bcntransit.model
+package com.bcntransit.app.model
 
 data class FavoriteDto(
     val USER_ID: String,

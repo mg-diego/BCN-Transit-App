@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.map
+package com.bcntransit.app.screens.map
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

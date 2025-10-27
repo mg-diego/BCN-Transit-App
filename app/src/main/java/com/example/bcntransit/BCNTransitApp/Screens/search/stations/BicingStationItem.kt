@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.search.stations
+package com.bcntransit.app.screens.search.stations
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.model.transport.BicingStationDto
+import com.bcntransit.app.model.transport.BicingStationDto
 
 @Composable
 fun BicingStationItem(station: BicingStationDto, filter: String) {

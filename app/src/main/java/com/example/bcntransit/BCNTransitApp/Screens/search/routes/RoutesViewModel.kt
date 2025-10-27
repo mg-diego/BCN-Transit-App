@@ -1,14 +1,14 @@
-package com.example.bcntransit.screens.search
+package com.bcntransit.app.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.transport.AccessDto
-import com.example.bcntransit.model.transport.LineDto
-import com.example.bcntransit.model.transport.RouteDto
-import com.example.bcntransit.model.transport.StationDto
-import com.example.bcntransit.util.toApiError
+import com.bcntransit.app.api.ApiService
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.transport.AccessDto
+import com.bcntransit.app.model.transport.LineDto
+import com.bcntransit.app.model.transport.RouteDto
+import com.bcntransit.app.model.transport.StationDto
+import com.bcntransit.app.util.toApiError
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -92,7 +92,7 @@ class RoutesViewModel(
             _stationConnectionState.value = _stationConnectionState.value.copy(loading = true, error = null)
             try {
                 val connections = apiService.getStationConnections(station.code)
-                    .filter { it.transport_type == station.transport_type }
+                    .filter { it.transport_type == station.transport_type }.filter { it.name != station.line_name }
                 _stationConnectionState.value = StationConnectionsUiState(
                     connections = connections,
                     loading = false

@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.map
+package com.bcntransit.app.screens.map
 
 import SearchTopBar
 import android.annotation.SuppressLint
@@ -25,14 +25,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.bcntransit.BCNTransitApp.Screens.map.MapViewModel
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.transport.BicingStationDto
-import com.example.bcntransit.model.transport.LineDto
-import com.example.bcntransit.model.transport.NearbyStation
-import com.example.bcntransit.model.transport.StationDto
+import com.bcntransit.app.BCNTransitApp.Screens.map.MapViewModel
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.transport.BicingStationDto
+import com.bcntransit.app.model.transport.LineDto
+import com.bcntransit.app.model.transport.NearbyStation
+import com.bcntransit.app.model.transport.StationDto
 import kotlinx.coroutines.launch
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
@@ -51,6 +51,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.material.icons.filled.Refresh
 import androidx.core.content.ContextCompat
+import com.example.bcntransit.BCNTransitApp.components.CustomFloatingActionButton
+import com.example.bcntransit.BCNTransitApp.components.CustomSwitch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -460,7 +462,7 @@ fun MapScreen(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         horizontalAlignment = Alignment.End
                     ) {
-                        FloatingActionButton(
+                        CustomFloatingActionButton(
                             onClick = {
                                 mapView.getMapAsync { map ->
                                     userLocation?.let { latLng ->
@@ -479,49 +481,25 @@ fun MapScreen(
                                     }
                                 }
                             },
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MyLocation,
-                                contentDescription = "Centrar en ubicación"
-                            )
-                        }
+                            imageVector = Icons.Default.MyLocation,
+                            contentDescription = "Centrar en ubicación"
+                        )
 
-                        FloatingActionButton(
+                        CustomFloatingActionButton(
                             onClick = {
                                 scope.launch {
                                     drawerState.open()
                                 }
                             },
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = "Filtros adicionales"
-                            )
-                        }
+                            imageVector = Icons.Default.FilterList,
+                            contentDescription = "Filtros adicionales"
+                        )
 
-                        FloatingActionButton(
+                        CustomFloatingActionButton(
                             onClick = { viewModel.updateNearbyStations() },
-                            shape = CircleShape,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Refresh,
-                                contentDescription = "Actualizar"
-                            )
-                        }
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Actualizar"
+                        )
                     }
                 }
             }
@@ -728,16 +706,12 @@ fun BicingAvailabilityFilters(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Solo paradas con slots libres", modifier = Modifier.weight(1f))
-            Switch(
+            CustomSwitch(
                 checked = localSlots,
                 onCheckedChange = {
                     localSlots = it
                     onOnlySlotsAvailableChange(it)
                 },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = colorResource(R.color.medium_red),
-                    checkedTrackColor = colorResource(R.color.medium_red).copy(alpha = 0.5f)
-                )
             )
         }
 
@@ -749,7 +723,7 @@ fun BicingAvailabilityFilters(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Solo paradas con bicis disponibles", modifier = Modifier.weight(1f))
-            Switch(
+            CustomSwitch(
                 checked = localBikeFilter != "none",
                 onCheckedChange = { checked ->
                     if (!checked) {
@@ -762,10 +736,6 @@ fun BicingAvailabilityFilters(
                         onOnlyMechanicalBikesChange(true)
                     }
                 },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = colorResource(R.color.medium_red),
-                    checkedTrackColor = colorResource(R.color.medium_red).copy(alpha = 0.5f)
-                )
             )
         }
 

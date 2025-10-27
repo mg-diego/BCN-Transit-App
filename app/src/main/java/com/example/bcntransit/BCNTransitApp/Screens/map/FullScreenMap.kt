@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.Screens.map
+package com.bcntransit.app.BCNTransitApp.Screens.map
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,10 +20,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.example.bcntransit.model.transport.AccessDto
-import com.example.bcntransit.screens.map.addMarker
-import com.example.bcntransit.screens.map.configureMapStyle
-import com.example.bcntransit.screens.map.rememberMapViewWithLifecycle
+import com.bcntransit.app.model.transport.AccessDto
+import com.bcntransit.app.screens.map.addMarker
+import com.bcntransit.app.screens.map.configureMapStyle
+import com.bcntransit.app.screens.map.getBitmapFromDrawable
+import com.bcntransit.app.screens.map.rememberMapViewWithLifecycle
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolManager
+import org.maplibre.android.plugins.annotation.SymbolOptions
+import com.bcntransit.app.R
+import com.bcntransit.app.screens.map.getDrawableIdByName
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLngBounds
 
 @Composable
 fun FullScreenMap(
@@ -51,45 +60,96 @@ fun FullScreenMap(
                         enableLocationComponent = false,
                         scrollEnabled = true,
                         zoomEnabled = true
-                    ) {
-                        map.clear()
-                        val accessesMarkers = mutableListOf<org.maplibre.android.annotations.Marker>()
+                    ) { style ->
 
-                        for (access in accesses) {
-                            val marker = addMarker(
-                                context = context,
-                                map = map,
-                                iconName = if (access.number_of_elevators > 0) "elevator" else "stairs",
-                                latitude = access.latitude,
-                                longitude = access.longitude,
-                                markerSizeMultiplier = 1.5f,
-                                zoom = 16.0
-                            )
-                            marker.let { accessesMarkers.add(it) }
+                        // Limpiar todo antes de dibujar
+                        map.clear()
+
+                        // Crear SymbolManager (para usar texto y símbolos personalizados)
+                        val symbolManager = SymbolManager(mapView, map, style).apply {
+                            iconAllowOverlap = true
+                            textAllowOverlap = false
                         }
 
-                        val marker = addMarker(
-                            context = context,
-                            map = map,
-                            iconName = transportType,
-                            latitude = latitude,
-                            longitude = longitude,
-                            markerSizeMultiplier = 1.5f,
-                            zoom = 16.0
+                        // Dibujar los accesos
+                        val accessesSymbols = mutableListOf<Symbol>()
+                        for (access in accesses) {
+
+                            val iconName = if (access.number_of_elevators > 0) "elevator" else "stairs"
+                            val drawableId = if (access.number_of_elevators > 0)
+                                R.drawable.elevator
+                            else
+                                R.drawable.stairs
+
+                            // Registrar icono si no existe ya
+                            if (style.getImage(iconName) == null) {
+                                val bitmap = getBitmapFromDrawable(context, drawableId, 64)
+                                style.addImage(iconName, bitmap)
+                            }
+
+                            // Crear símbolo con texto debajo
+                            val symbolOptions = SymbolOptions()
+                                .withLatLng(LatLng(access.latitude, access.longitude))
+                                .withIconImage(iconName)
+                                .withIconSize(1.2f)
+                                .withTextField(access.name ?: "")
+                                .withTextOffset(arrayOf(0f, 2.0f)) // texto debajo del icono
+                                .withTextSize(10f)
+                                .withTextColor("#333333")
+                                .withTextHaloColor("#FFFFFF")
+                                .withTextHaloWidth(2f)
+                                .withTextAnchor("top")
+
+                            val symbol = symbolManager.create(symbolOptions)
+                            accessesSymbols.add(symbol)
+                        }
+
+                        // Dibujar marcador principal (transporte)
+                        val mainIconName = transportType
+                        if (style.getImage(mainIconName) == null) {
+                            val bitmap = getBitmapFromDrawable(
+                                context,
+                                getDrawableIdByName(context, transportType),
+                                72)
+                            style.addImage(mainIconName, bitmap)
+                        }
+
+                        val mainSymbol = symbolManager.create(
+                            SymbolOptions()
+                                .withLatLng(LatLng(latitude, longitude))
+                                .withIconImage(mainIconName)
+                                .withIconSize(1.5f)
                         )
 
-                        map.setOnMarkerClickListener { clickedMarker ->
-                            if (clickedMarker == marker || clickedMarker in accessesMarkers) {
+                        val allPoints = accesses.map { LatLng(it.latitude, it.longitude) } + LatLng(latitude, longitude)
+
+                        if (allPoints.size > 1) {
+                            val boundsBuilder = LatLngBounds.Builder()
+                            allPoints.forEach { boundsBuilder.include(it) }
+                            val bounds = boundsBuilder.build()
+                            map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200))
+                        } else {
+                            map.animateCamera(
+                                CameraUpdateFactory.newLatLngZoom(LatLng(latitude, longitude), 16.0)
+                            )
+                        }
+
+                        // Click listener para los símbolos
+                        symbolManager.addClickListener { clickedSymbol ->
+                            if (clickedSymbol == mainSymbol || clickedSymbol in accessesSymbols) {
                                 showDirectionsPopup = true
-                                selectedMarkerLatitude = clickedMarker.position.latitude
-                                selectedMarkerLongitude = clickedMarker.position.longitude
-                                true
-                            } else false
+                                selectedMarkerLatitude = clickedSymbol.latLng.latitude
+                                selectedMarkerLongitude = clickedSymbol.latLng.longitude
+                                true  // <- Indica que manejaste el clic
+                            } else {
+                                false // <- No se maneja el clic
+                            }
                         }
                     }
                 }
             }
         )
+
 
         IconButton(
             onClick = onDismiss,

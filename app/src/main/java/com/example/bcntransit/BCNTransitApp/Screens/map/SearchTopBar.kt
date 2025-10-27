@@ -16,9 +16,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.transport.NearbyStation
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.model.transport.NearbyStation
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch

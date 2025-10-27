@@ -1,11 +1,11 @@
-package com.example.bcntransit.screens.search
+package com.bcntransit.app.screens.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.transport.LineDto
-import com.example.bcntransit.util.toApiError
+import com.bcntransit.app.api.ApiService
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.transport.LineDto
+import com.bcntransit.app.util.toApiError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

@@ -1,4 +1,4 @@
-package com.example.bcntransit
+package com.bcntransit.app
 
 import android.Manifest
 import android.os.Bundle
@@ -15,6 +15,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Instalar SplashScreen
         //val splashScreen = installSplashScreen()
+
+        // Forzar ocultar ActionBar por si acaso
+        actionBar?.hide()
 
         // Ajustes de ventana y barra de estado
         WindowCompat.setDecorFitsSystemWindows(window, true)

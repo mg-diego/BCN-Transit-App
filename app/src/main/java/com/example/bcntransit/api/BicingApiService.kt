@@ -1,6 +1,6 @@
-package com.example.bcntransit.api
+package com.bcntransit.app.api
 
-import com.example.bcntransit.model.transport.BicingStationDto
+import com.bcntransit.app.model.transport.BicingStationDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 

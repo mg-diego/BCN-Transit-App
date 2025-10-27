@@ -1,13 +1,18 @@
-package com.example.bcntransit.BCNTransitApp.Screens.navigation
+package com.bcntransit.app.BCNTransitApp.Screens.navigation
 
-import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
-import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
-import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
+import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
+import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
+import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
 
 sealed class Screen(val route: String) {
     object Map : Screen("map")
     object Favorites : Screen("favorites")
-    object User : Screen("user")
+    object Settings : Screen("settings")
+    object About : Screen("about")
+
+    object Privacy : Screen("privacy")
+
+    object Terms : Screen("terms")
 
     val typeParam: String = "type"
     val lineCodeParam: String = "lineCode"

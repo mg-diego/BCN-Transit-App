@@ -1,42 +1,48 @@
-    package com.example.bcntransit
+    package com.bcntransit.app
 
     import androidx.compose.foundation.layout.padding
     import androidx.compose.material3.Scaffold
     import androidx.compose.runtime.*
     import androidx.compose.ui.Modifier
     import androidx.compose.ui.platform.LocalContext
-    import com.example.bcntransit.api.ApiClient
-    import com.example.bcntransit.data.enums.BottomTab
-    import com.example.bcntransit.model.transport.LineDto
-    import com.example.bcntransit.model.transport.StationDto
-    import com.example.bcntransit.screens.BottomNavigationBar
-    import com.example.bcntransit.screens.PlaceholderScreen
-    import com.example.bcntransit.screens.map.MapScreen
-    import com.example.bcntransit.screens.search.BusLinesScreen
-    import com.example.bcntransit.screens.search.SearchScreen
-    import android.provider.Settings
+    import com.bcntransit.app.api.ApiClient
+    import com.bcntransit.app.data.enums.BottomTab
+    import com.bcntransit.app.model.transport.LineDto
+    import com.bcntransit.app.model.transport.StationDto
+    import com.bcntransit.app.screens.BottomNavigationBar
+    import com.bcntransit.app.screens.map.MapScreen
+    import com.bcntransit.app.screens.search.BusLinesScreen
+    import com.bcntransit.app.screens.search.SearchScreen
+    import androidx.lifecycle.viewmodel.compose.viewModel
     import androidx.navigation.NavType
     import androidx.navigation.compose.NavHost
     import androidx.navigation.compose.composable
     import androidx.navigation.compose.currentBackStackEntryAsState
     import androidx.navigation.compose.rememberNavController
     import androidx.navigation.navArgument
-    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen
-    import com.example.bcntransit.data.enums.TransportType
-    import com.example.bcntransit.screens.favorites.FavoritesScreen
-    import com.example.bcntransit.screens.search.LineListScreen
-    import com.example.bcntransit.screens.search.RoutesScreen
+    import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen
+    import com.bcntransit.app.data.enums.TransportType
+    import com.bcntransit.app.screens.favorites.FavoritesScreen
+    import com.bcntransit.app.screens.search.LineListScreen
+    import com.bcntransit.app.screens.search.RoutesScreen
 
-    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
-    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
-    import com.example.bcntransit.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
-    import com.example.bcntransit.screens.search.StationListScreen
-    import com.example.bcntransit.screens.search.stations.BicingScreen
-    import com.example.bcntransit.util.getAndroidId
+    import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
+    import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
+    import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
+    import com.bcntransit.app.screens.search.StationListScreen
+    import com.bcntransit.app.screens.search.stations.BicingScreen
+    import com.bcntransit.app.screens.settings.SettingsScreen
+    import com.bcntransit.app.util.getAndroidId
+    import com.bcntransit.app.widget.RegisterViewModel
+    import com.example.bcntransit.BCNTransitApp.Screens.settings.AboutScreen
+    import com.example.bcntransit.BCNTransitApp.Screens.settings.PrivacyPolicyScreen
+    import com.example.bcntransit.BCNTransitApp.Screens.settings.TermsAndConditionsScreen
 
     @Composable
     fun BCNTransitApp() {
         val navController = rememberNavController()
+        val registerViewModel: RegisterViewModel = viewModel()
+        val currentUserId = getAndroidId(LocalContext.current)
 
         // Observa el destino actual del NavHost
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -47,51 +53,66 @@
             Screen.Map.route -> BottomTab.MAP
             Screen.Search.route -> BottomTab.SEARCH
             Screen.Favorites.route -> BottomTab.FAVORITES
-            Screen.User.route -> BottomTab.USER
+            Screen.Settings.route -> BottomTab.SETTINGS
             else -> BottomTab.MAP
+        }
+
+        val showBottomBar = currentRoute in listOf(
+            Screen.Map.route,
+            Screen.Search.route,
+            Screen.Favorites.route,
+        )
+
+        LaunchedEffect(Unit) {
+            registerViewModel.registerUser(currentUserId)
         }
 
         Scaffold(
             bottomBar = {
-                BottomNavigationBar(
-                    selectedTab = currentBottomTab,
-                    onTabSelected = { tab ->
-                        when (tab) {
-                            BottomTab.MAP -> navController.navigate(Screen.Map.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = false
-                                    saveState = false
+                if (showBottomBar) {
+                    BottomNavigationBar(
+                        selectedTab = currentBottomTab,
+                        onTabSelected = { tab ->
+                            when (tab) {
+                                BottomTab.MAP -> navController.navigate(Screen.Map.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = false
+                                        saveState = false
+                                    }
+                                    restoreState = false
+                                    launchSingleTop = true
                                 }
-                                restoreState = false
-                                launchSingleTop = true
-                            }
-                            BottomTab.SEARCH -> navController.navigate(Screen.Search.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = false
-                                    saveState = false
+
+                                BottomTab.SEARCH -> navController.navigate(Screen.Search.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = false
+                                        saveState = false
+                                    }
+                                    restoreState = false
+                                    launchSingleTop = true
                                 }
-                                restoreState = false
-                                launchSingleTop = true
-                            }
-                            BottomTab.FAVORITES -> navController.navigate(Screen.Favorites.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = false
-                                    saveState = false
+
+                                BottomTab.FAVORITES -> navController.navigate(Screen.Favorites.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = false
+                                        saveState = false
+                                    }
+                                    restoreState = false
+                                    launchSingleTop = true
                                 }
-                                restoreState = false
-                                launchSingleTop = true
-                            }
-                            BottomTab.USER -> navController.navigate(Screen.User.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = false
-                                    saveState = false
+
+                                BottomTab.SETTINGS -> navController.navigate(Screen.Settings.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = false
+                                        saveState = false
+                                    }
+                                    restoreState = false
+                                    launchSingleTop = true
                                 }
-                                restoreState = false
-                                launchSingleTop = true
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
         ) { padding ->
             NavHost(
@@ -131,12 +152,14 @@
                     val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
                     val transportType = TransportType.from(typeArg)
                     if (transportType == TransportType.BUS) {
-                        BusLinesScreen(onLineClick = { line: LineDto ->
-                            navController.navigate(
-                                Screen.SearchLine.viewLine(typeArg, line.code)
-                            )
-                        })
-                    } else if (transportType == TransportType.BICING){
+                        BusLinesScreen(
+                            onLineClick = { line: LineDto ->
+                                navController.navigate(
+                                    Screen.SearchLine.viewLine(typeArg, line.code)
+                                )
+                            },
+                            onBackClick = { navController.popBackStack() } )
+                    } else if (transportType == TransportType.BICING) {
                         BicingScreen()
                     } else {
                         LineListScreen(
@@ -146,7 +169,8 @@
                                 navController.navigate(
                                     Screen.SearchLine.viewLine(typeArg, line.code)
                                 )
-                            }
+                            },
+                            onBackClick = { navController.popBackStack() }
                         )
                     }
 
@@ -160,9 +184,10 @@
                     )
                 ) { backStack ->
                     val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
-                    val lineCodeArg = backStack.arguments?.getString(lineCodeParam) ?: return@composable
+                    val lineCodeArg =
+                        backStack.arguments?.getString(lineCodeParam) ?: return@composable
                     val transportType = TransportType.from(typeArg)
-                    StationListScreen (
+                    StationListScreen(
                         lineCode = lineCodeArg,
                         transportType = TransportType.from(typeArg),
                         apiService = ApiClient.from(transportType),
@@ -170,7 +195,8 @@
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(typeArg, lineCodeArg, station.code)
                             )
-                        }
+                        },
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
                 /** RUTAS DE UNA ESTACIÓN */
@@ -183,8 +209,10 @@
                     )
                 ) { backStack ->
                     val typeArg = backStack.arguments?.getString(typeParam) ?: return@composable
-                    val lineCodeArg = backStack.arguments?.getString(lineCodeParam) ?: return@composable
-                    val stationCodeParam = backStack.arguments?.getString(stationCodeParam) ?: return@composable
+                    val lineCodeArg =
+                        backStack.arguments?.getString(lineCodeParam) ?: return@composable
+                    val stationCodeParam =
+                        backStack.arguments?.getString(stationCodeParam) ?: return@composable
                     val transportType = TransportType.from(typeArg)
                     RoutesScreen(
                         stationCode = stationCodeParam,
@@ -211,9 +239,31 @@
                         }
                     )
                 }
-                composable(Screen.User.route) {
-                    PlaceholderScreen("Usuario")}
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        onBackClick = { navController.popBackStack() },
+                        onNavigateToAbout = { navController.navigate(Screen.About.route) },
+                        onNavigateToPrivacy = { navController.navigate(Screen.Privacy.route) },
+                        onNavigateToTermsAndConditions = { navController.navigate(Screen.Terms.route) }
+                    )
+                }
+                composable(Screen.About.route) {
+                    AboutScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.Privacy.route) {
+                    PrivacyPolicyScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.Terms.route) {
+                    TermsAndConditionsScreen(
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
+
 

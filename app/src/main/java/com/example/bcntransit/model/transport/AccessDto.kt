@@ -1,4 +1,4 @@
-package com.example.bcntransit.model.transport
+package com.bcntransit.app.model.transport
 
 data class AccessDto(
     val id: String,

@@ -1,4 +1,4 @@
-package com.example.bcntransit.util
+package com.bcntransit.app.util
 
 import android.annotation.SuppressLint
 import android.content.Context

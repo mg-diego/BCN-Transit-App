@@ -1,6 +1,6 @@
-package com.example.bcntransit.model
+package com.bcntransit.app.model
 
-import com.example.bcntransit.model.transport.NearbyStation
+import com.bcntransit.app.model.transport.NearbyStation
 import org.maplibre.android.annotations.Icon
 
 data class MarkerInfo(

@@ -1,13 +1,13 @@
-package com.example.bcntransit.BCNTransitApp.Screens.search.stations
+package com.bcntransit.app.BCNTransitApp.Screens.search.stations
 
 import android.Manifest
 import android.content.Context
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.transport.BicingStationDto
-import com.example.bcntransit.screens.map.hasLocationPermission
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.model.transport.BicingStationDto
+import com.bcntransit.app.screens.map.hasLocationPermission
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow

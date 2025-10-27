@@ -1,9 +1,9 @@
-package com.example.bcntransit.api
+package com.bcntransit.app.api
 
-import com.example.bcntransit.model.transport.AccessDto
-import com.example.bcntransit.model.transport.LineDto
-import com.example.bcntransit.model.transport.RouteDto
-import com.example.bcntransit.model.transport.StationDto
+import com.bcntransit.app.model.transport.AccessDto
+import com.bcntransit.app.model.transport.LineDto
+import com.bcntransit.app.model.transport.RouteDto
+import com.bcntransit.app.model.transport.StationDto
 
 interface ApiService {
     suspend fun getLines(): List<LineDto>

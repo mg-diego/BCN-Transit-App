@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "199892773505",
+    "project_id": "bcn-transit-app",
+    "storage_bucket": "bcn-transit-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199892773505:android:560eb6a6e28d6ce73e7b80",
+        "android_client_info": {
+          "package_name": "com.bcntransit.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC17oAKYTVLfbqSSEV8mbRLCi8fzEU9k1s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

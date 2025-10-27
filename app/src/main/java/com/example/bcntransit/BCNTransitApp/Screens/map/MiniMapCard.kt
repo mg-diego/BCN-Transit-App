@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.Screens.map
+package com.bcntransit.app.BCNTransitApp.Screens.map
 
 
 import androidx.compose.material.icons.Icons
@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.bcntransit.model.transport.AccessDto
-import com.example.bcntransit.screens.map.addMarker
-import com.example.bcntransit.screens.map.configureMapStyle
-import com.example.bcntransit.screens.map.rememberMapViewWithLifecycle
+import com.bcntransit.app.model.transport.AccessDto
+import com.bcntransit.app.screens.map.addMarker
+import com.bcntransit.app.screens.map.configureMapStyle
+import com.bcntransit.app.screens.map.rememberMapViewWithLifecycle
 
 @Composable
 fun MiniMap(

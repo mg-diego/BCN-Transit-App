@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.Screens.map
+package com.bcntransit.app.BCNTransitApp.Screens.map
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -6,12 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.model.MarkerInfo
-import com.example.bcntransit.model.transport.*
-import com.example.bcntransit.screens.map.getNearbyStations
-import com.example.bcntransit.screens.map.getUserLocation
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.api.ApiService
+import com.bcntransit.app.model.MarkerInfo
+import com.bcntransit.app.model.transport.*
+import com.bcntransit.app.screens.map.getNearbyStations
+import com.bcntransit.app.screens.map.getUserLocation
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

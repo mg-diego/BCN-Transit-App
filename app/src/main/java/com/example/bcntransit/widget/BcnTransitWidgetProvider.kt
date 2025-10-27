@@ -1,4 +1,4 @@
-package com.example.bcntransit.widget
+package com.bcntransit.app.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -10,11 +10,11 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
-import com.example.bcntransit.R
-import com.example.bcntransit.WidgetConfigurationActivity
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.utils.formatArrivalTime
+import com.bcntransit.app.R
+import com.bcntransit.app.WidgetConfigurationActivity
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.utils.formatArrivalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -38,7 +38,7 @@ class BcnTransitWidgetProvider : AppWidgetProvider() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == "com.example.bcntransit.REFRESH_WIDGET") {
+        if (intent.action == "com.bcntransit.app.REFRESH_WIDGET") {
             val widgetIds = intent.getIntArrayExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS)
             widgetIds?.forEach { widgetId ->
                 refreshOrUpdateWidget(context, AppWidgetManager.getInstance(context), widgetId)
@@ -125,7 +125,7 @@ class BcnTransitWidgetProvider : AppWidgetProvider() {
 
                 // Botón refresh
                 val refreshIntent = Intent(context, BcnTransitWidgetProvider::class.java).apply {
-                    action = "com.example.bcntransit.REFRESH_WIDGET"
+                    action = "com.bcntransit.app.REFRESH_WIDGET"
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(widgetId))
                 }
                 val refreshPendingIntent = PendingIntent.getBroadcast(

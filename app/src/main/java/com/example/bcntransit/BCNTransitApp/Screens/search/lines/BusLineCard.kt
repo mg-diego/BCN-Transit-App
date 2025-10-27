@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.Screens.search.lines
+package com.bcntransit.app.BCNTransitApp.Screens.search.lines
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,7 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.model.transport.LineDto
+import com.bcntransit.app.model.transport.LineDto
 
 @Composable
 fun BusLineCard(

@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.search.stations
+package com.bcntransit.app.screens.search.stations
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.BCNTransitApp.Screens.search.stations.BicingViewModel
-import com.example.bcntransit.BCNTransitApp.components.CategoryCollapsable
-import com.example.bcntransit.data.enums.TransportType
+import com.bcntransit.app.BCNTransitApp.Screens.search.stations.BicingViewModel
+import com.bcntransit.app.BCNTransitApp.components.CategoryCollapsable
+import com.bcntransit.app.data.enums.TransportType
 import org.maplibre.android.geometry.LatLng
 import kotlin.math.*
 

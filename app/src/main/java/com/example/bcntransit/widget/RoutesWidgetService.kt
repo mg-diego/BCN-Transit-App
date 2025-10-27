@@ -1,15 +1,15 @@
-package com.example.bcntransit.widget
+package com.bcntransit.app.widget
 
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.transport.RouteDto
-import com.example.bcntransit.utils.formatArrivalTime
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.transport.RouteDto
+import com.bcntransit.app.utils.formatArrivalTime
 import kotlinx.coroutines.runBlocking
 
 class RoutesWidgetService : RemoteViewsService() {

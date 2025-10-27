@@ -1,4 +1,4 @@
-package com.example.bcntransit.util
+package com.bcntransit.app.util
 
 sealed class ApiError(val code: String, val userMessage: String) : Throwable() {
     object Network : ApiError("E001", "No se puede conectar a internet. Revisa tu conexión.")

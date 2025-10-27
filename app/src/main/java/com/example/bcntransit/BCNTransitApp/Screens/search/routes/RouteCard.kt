@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.Screens.search.routes
+package com.bcntransit.app.BCNTransitApp.Screens.search.routes
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,9 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.BCNTransitApp.components.ArrivalCountdown
-import com.example.bcntransit.R
-import com.example.bcntransit.model.transport.RouteDto
+import com.bcntransit.app.BCNTransitApp.components.ArrivalCountdown
+import com.bcntransit.app.R
+import com.bcntransit.app.model.transport.RouteDto
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.search
+package com.bcntransit.app.screens.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -27,17 +27,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.bcntransit.BCNTransitApp.Screens.map.FullScreenMap
-import com.example.bcntransit.BCNTransitApp.Screens.map.MiniMap
-import com.example.bcntransit.BCNTransitApp.Screens.search.routes.RouteCard
-import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.data.enums.TransportType
-import com.example.bcntransit.model.FavoriteDto
-import com.example.bcntransit.screens.map.getDrawableIdByName
-import com.example.bcntransit.util.getAndroidId
+import com.bcntransit.app.BCNTransitApp.Screens.map.FullScreenMap
+import com.bcntransit.app.BCNTransitApp.Screens.map.MiniMap
+import com.bcntransit.app.BCNTransitApp.Screens.search.routes.RouteCard
+import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.api.ApiService
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.FavoriteDto
+import com.bcntransit.app.screens.map.getDrawableIdByName
+import com.bcntransit.app.util.getAndroidId
+import com.example.bcntransit.BCNTransitApp.components.CustomFloatingActionButton
 import kotlinx.coroutines.launch
 import kotlin.Unit
 
@@ -117,7 +118,6 @@ fun RoutesScreen(
                 contentPadding = PaddingValues(top = 32.dp, start = 16.dp, end = 16.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // HEADER ESTACIÓN
                 // HEADER ESTACIÓN
                 item {
                     Row(
@@ -336,17 +336,14 @@ fun RoutesScreen(
                                 .height(200.dp)
                                 .padding(top = 16.dp)
                         )
-                        FloatingActionButton(
+                        CustomFloatingActionButton(
                             onClick = { showFullMap = true },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(16.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.OpenInFull,
-                                contentDescription = "Abrir mapa"
-                            )
-                        }
+                                .padding(16.dp),
+                            imageVector = Icons.Filled.OpenInFull,
+                            contentDescription = "Abrir mapa"
+                        )
                     }
                 }
                 if (accessesState.loading) {

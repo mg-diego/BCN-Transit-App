@@ -1,7 +1,7 @@
-package com.example.bcntransit.api
+package com.bcntransit.app.api
 
 
-import com.example.bcntransit.data.enums.TransportType
+import com.bcntransit.app.data.enums.TransportType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://bcn-transit-bot-production.up.railway.app/api/"
+    private const val BASE_URL = "https://bcn-transit-bot-production.up.railway.app/api/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

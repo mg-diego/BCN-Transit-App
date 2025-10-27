@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.BCNTransit" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.BCNTransit" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
     <style name="Theme.BCNTransit.Splash" parent="Theme.SplashScreen">
         <!-- Color que se ve detrás del icono -->
         <item name="windowSplashScreenBackground">@color/splash_background</item>

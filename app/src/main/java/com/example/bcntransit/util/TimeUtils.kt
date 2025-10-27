@@ -1,4 +1,4 @@
-package com.example.bcntransit.utils
+package com.bcntransit.app.utils
 
 import java.text.SimpleDateFormat
 import java.util.*

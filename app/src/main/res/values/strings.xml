@@ -3,4 +3,33 @@
     <string name="widget_bcn_transit_description">
         Muestra una de tus estaciones favoritas, incluyendo la línea, dirección y próximos trenes.
     </string>
+    <string name="terms_title">Términos y Condiciones</string>
+    <string name="back">Atrás</string>
+
+    <string name="terms_header">Condiciones de uso de la aplicación</string>
+    <string name="terms_intro">
+    Al utilizar esta aplicación, aceptas los siguientes términos y condiciones.
+    Por favor, léelos detenidamente antes de continuar.
+</string>
+
+    <string name="terms_section1_title">1. Uso permitido</string>
+    <string name="terms_section1_text">
+    Esta aplicación está destinada exclusivamente para uso personal e informativo.
+    No está permitido modificar, distribuir o utilizar su contenido con fines comerciales
+    sin autorización previa.
+</string>
+
+    <string name="terms_section2_title">2. Responsabilidad</string>
+    <string name="terms_section2_text">
+    El desarrollador no se hace responsable por daños o pérdidas derivados del uso
+    o mal uso de la aplicación, ni garantiza la disponibilidad continua del servicio.
+</string>
+
+    <string name="terms_last_update">Última actualización: Octubre 2025</string>
+    <string name="metro">El metro de Barcelona abre todos los días a las 5 de la mañana. Las horas de finalización del servicio varían en función del tipo de día.\n\n
+        Laborables (de lunes a jueves): hasta las 24.00 h.\n
+        Viernes y vísperas de festivo: hasta las 2.00 h.\n
+        Sábados: servicio continuo toda la noche.\n
+        Domingos y festivos entre semana: hasta las 24.00 h.
+    </string>
 </resources>

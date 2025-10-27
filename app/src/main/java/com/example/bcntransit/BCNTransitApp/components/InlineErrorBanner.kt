@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.components
+package com.bcntransit.app.BCNTransitApp.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

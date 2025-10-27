@@ -1,4 +1,4 @@
-package com.example.bcntransit.BCNTransitApp.components
+package com.bcntransit.app.BCNTransitApp.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

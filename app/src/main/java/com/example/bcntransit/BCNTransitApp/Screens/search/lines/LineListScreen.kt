@@ -1,35 +1,39 @@
-package com.example.bcntransit.screens.search
+package com.bcntransit.app.screens.search
 
+import android.annotation.SuppressLint
+import android.text.Html
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiService
-import com.example.bcntransit.data.enums.TransportType
+import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
+import com.bcntransit.app.api.ApiService
+import com.bcntransit.app.data.enums.TransportType
+import com.bcntransit.app.model.transport.LineDto
+import com.example.bcntransit.BCNTransitApp.components.CustomTopBar
+import com.bcntransit.app.R
+import com.example.bcntransit.BCNTransitApp.components.ExpandableItem
 
-import com.example.bcntransit.model.transport.LineDto
-
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LineListScreen(
     transportType: TransportType,
     apiService: ApiService,
-    onLineClick: (LineDto) -> Unit
+    onLineClick: (LineDto) -> Unit,
+    onBackClick: () -> Unit
 ) {
     val viewModel: LineListViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
         key = "$transportType-${apiService.hashCode()}",
@@ -44,60 +48,63 @@ fun LineListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    Column {
-        // Cabecera con sombra
-        Box(Modifier.fillMaxWidth()) {
-            val drawableId = remember(transportType) {
-                context.resources.getIdentifier(transportType.type, "drawable", context.packageName)
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    painter = painterResource(drawableId),
-                    contentDescription = null,
-                    tint = Color.Unspecified,
-                    modifier = Modifier.size(42.dp)
-                )
-                Spacer(Modifier.width(16.dp))
-                Text("Líneas", style = MaterialTheme.typography.titleLarge)
-            }
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .background(
-                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Black.copy(alpha = 0.25f),
-                                Color.Transparent
-                            )
+    Scaffold(
+        topBar = {
+            CustomTopBar(
+                onBackClick = onBackClick,
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val drawableId = remember(transportType) {
+                            context.resources.getIdentifier(transportType.type, "drawable", context.packageName)
+                        }
+                        Icon(
+                            painter = painterResource(drawableId),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(42.dp)
                         )
-                    )
+                        Spacer(Modifier.width(16.dp))
+                        Text("Líneas", style = MaterialTheme.typography.titleLarge)
+                    }
+                },
             )
         }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                uiState.loading -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFFDD5555)) // medium_red
+                }
 
-        when {
-            uiState.loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = colorResource(R.color.medium_red))
-            }
-            uiState.error != null -> { InlineErrorBanner(uiState.error!!) }
-            else -> androidx.compose.foundation.lazy.LazyColumn(
-                modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(uiState.lines) { line ->
-                    LineCard(line) {
-                        onLineClick(line)
+                uiState.error != null -> InlineErrorBanner(uiState.error!!)
+
+                else -> LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "Líneas disponibles",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    items(uiState.lines) { line ->
+                        LineItem(line) { onLineClick(line) }
+                    }
                 }
             }
         }

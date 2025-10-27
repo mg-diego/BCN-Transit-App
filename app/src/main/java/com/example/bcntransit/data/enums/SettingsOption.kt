@@ -1,3 +1,3 @@
-package com.example.bcntransit.data.enums
+package com.bcntransit.app.data.enums
 
 enum class SettingsOption { NOTIFICATIONS, LANGUAGE, HELP }

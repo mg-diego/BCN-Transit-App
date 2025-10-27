@@ -1,6 +1,6 @@
-package com.example.bcntransit.api
+package com.bcntransit.app.api
 
-import com.example.bcntransit.model.FavoriteDto
+import com.bcntransit.app.model.FavoriteDto
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -12,7 +12,21 @@ import retrofit2.http.Query
 
 interface UserApiService {
     @POST("users/{userId}/register")
-    suspend fun registerUser(@Path("userId") userId: String): Boolean
+    suspend fun registerUser(
+        @Path("userId") userId: String,
+        @Body body: Map<String, String>
+    ): Boolean
+
+    @POST("users/{userId}/notifications/toggle/{status}")
+    suspend fun toggleUserNotifications(
+        @Path("userId") userId: String,
+        @Path("status") status: Boolean
+    ): Boolean
+
+    @GET("users/{userId}/notifications/configuration")
+    suspend fun getUserNotificationsConfiguration(
+        @Path("userId") userId: String
+    ): Boolean
 
     @GET("users/{userId}/favorites")
     suspend fun getUserFavorites(@Path("userId") userId: String): List<FavoriteDto>

@@ -2,14 +2,15 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.bcntransit"
+    namespace = "com.bcntransit.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.bcntransit"
+        applicationId = "com.bcntransit.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -43,6 +44,11 @@ android {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    
     implementation("org.maplibre.gl:android-sdk:11.5.0")
     implementation("org.maplibre.gl:android-plugin-annotation-v9:3.0.0")
     implementation("com.mapbox.mapboxsdk:mapbox-android-gestures:0.7.0")
@@ -65,6 +71,9 @@ dependencies {
     implementation(libs.foundation)
     implementation(libs.ui.text)
     implementation(libs.androidx.compose.foundation.foundation)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.datastore.preferences.core)
+    implementation(libs.runtime)
 
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")

@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.search
+package com.bcntransit.app.screens.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,10 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.transport.StationDto
-import com.example.bcntransit.model.FavoriteDto
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.model.transport.StationDto
+import com.bcntransit.app.model.FavoriteDto
 import kotlinx.coroutines.launch
 
 @Composable

@@ -1,4 +1,4 @@
-package com.example.bcntransit.screens.map
+package com.bcntransit.app.screens.map
 
 import android.Manifest
 import android.content.Context
@@ -11,8 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.transport.NearbyStation
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.model.transport.NearbyStation
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await

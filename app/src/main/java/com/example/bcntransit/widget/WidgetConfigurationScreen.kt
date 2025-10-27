@@ -1,4 +1,4 @@
-package com.example.bcntransit.widget
+package com.bcntransit.app.widget
 
 import android.provider.Settings
 import androidx.compose.foundation.LocalIndication
@@ -30,10 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import com.example.bcntransit.BCNTransitApp.components.InlineErrorBanner
-import com.example.bcntransit.R
-import com.example.bcntransit.api.ApiClient
-import com.example.bcntransit.model.FavoriteDto
+import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
+import com.bcntransit.app.R
+import com.bcntransit.app.api.ApiClient
+import com.bcntransit.app.model.FavoriteDto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

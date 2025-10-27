@@ -18,6 +18,9 @@ uiUnit = "1.9.2"
 foundationVersion = "1.9.2"
 uiTextVersion = "1.9.2"
 androidxFoundation = "1.9.4"
+datastoreCore = "1.1.7"
+datastorePreferencesCore = "1.1.7"
+runtimeVersion = "1.9.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,6 +47,9 @@ androidx-ui-unit = { group = "androidx.compose.ui", name = "ui-unit", version.re
 foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 ui-text = { group = "androidx.compose.ui", name = "ui-text", version.ref = "uiTextVersion" }
 androidx-compose-foundation-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "androidxFoundation" }
+androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core", version.ref = "datastoreCore" }
+androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastorePreferencesCore" }
+runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtimeVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

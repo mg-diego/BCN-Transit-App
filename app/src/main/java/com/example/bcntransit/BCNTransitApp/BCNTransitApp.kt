@@ -222,7 +222,8 @@
                             navController.navigate(
                                 Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)
                             )
-                        }
+                        },
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 

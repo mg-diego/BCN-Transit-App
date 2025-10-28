@@ -73,7 +73,7 @@ fun FavoritesScreen(
                 onBackClick = { },
                 showBackButton = false
             )
-        },
+        }
     ) { padding ->
         Column(
             modifier = Modifier

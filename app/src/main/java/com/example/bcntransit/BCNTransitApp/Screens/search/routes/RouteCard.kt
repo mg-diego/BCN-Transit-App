@@ -46,7 +46,10 @@ fun RouteCard(route: RouteDto, isLoading: Boolean) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Card(
             modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+            )
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -77,9 +80,11 @@ fun RouteCard(route: RouteDto, isLoading: Boolean) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
                             Spacer(modifier = Modifier.width(12.dp))
                             Box(
-                                modifier = Modifier.size(24.dp).background(color = MaterialTheme.colorScheme.secondary, shape = CircleShape),
+                                modifier = Modifier.size(24.dp).background(color = colorResource(R.color.next_arrival_background), shape = CircleShape),
                                 contentAlignment = Alignment.Center
-                            ) { Text((index+1).toString(), style = MaterialTheme.typography.bodyMedium, color = Color.White) }
+                            ) {
+                                Text((index+1).toString(), style = MaterialTheme.typography.bodyMedium, color = colorResource(R.color.next_arrival_text))
+                            }
 
                             Spacer(modifier = Modifier.width(12.dp))
                             ArrivalCountdown(arrivalEpochSeconds = trip.arrival_time, index)

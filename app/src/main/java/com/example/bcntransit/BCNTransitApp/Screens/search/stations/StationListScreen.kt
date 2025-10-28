@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
+import com.bcntransit.app.BCNTransitApp.screens.map.StationsMap
 import com.bcntransit.app.R
 import com.bcntransit.app.api.ApiService
 import com.bcntransit.app.model.transport.StationDto
@@ -42,6 +43,8 @@ fun StationListScreen(
     )
     val currentUserId = getAndroidId(LocalContext.current)
     val uiState by viewModel.uiState.collectAsState()
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("Lista", "Mapa")
 
     uiState.line?.let { line ->
         val parsedColor = Color(android.graphics.Color.parseColor(if (line.color.startsWith("#")) line.color else "#${line.color}"))
@@ -59,10 +62,7 @@ fun StationListScreen(
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .padding(16.dp)
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surface)
-                                .padding(8.dp)
                         ) {
                             Icon(
                                 painter = painterResource(drawableId),
@@ -81,9 +81,11 @@ fun StationListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
+                // AÑADIR DOS TABS: LISTA y MAPA
+                // el SegmentedSelector se ve en ambas tabs, el itemsIndexed por ahora solo en LISTA, en MAPA deja un placeholder
                 Column {
-                    // Toggle de dirección
                     if (line.origin.isNotEmpty() && line.destination.isNotEmpty()) {
                         Row(
                             modifier = Modifier
@@ -94,9 +96,25 @@ fun StationListScreen(
                             SegmentedSelector(
                                 options = listOf("${line.origin} → ${line.destination}", "${line.destination} → ${line.origin}"),
                                 direction = uiState.direction,
-                                onOptiondirection = { viewModel.selectDirection(it) },
-                                modifier = Modifier.fillMaxWidth(0.9f),
+                                onSelectedOption = { viewModel.selectDirection(it) },
                                 lineColor = parsedColor
+                            )
+                        }
+                    }
+
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = { Text(title) }
                             )
                         }
                     }
@@ -109,30 +127,64 @@ fun StationListScreen(
 
                         uiState.error != null -> InlineErrorBanner(uiState.error!!)
 
-                        else -> LazyColumn(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(0.dp)
-                        ) {
-                            val showStations = if (transportType == TransportType.BUS) {
-                                if (uiState.direction.startsWith(line.origin)) uiState.stations.filter { it.DESTI_SENTIT == line.destination }
-                                else uiState.stations.filter { it.DESTI_SENTIT == line.origin }
-                            } else {
-                                if (uiState.direction.startsWith(line.origin)) uiState.stations
-                                else uiState.stations.reversed()
-                            }
+                        else -> when (selectedTab) {
+                            0 ->
+                                LazyColumn(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                                ) {
+                                    val showStations = if (transportType == TransportType.BUS) {
+                                        if (uiState.direction.startsWith(line.origin)) uiState.stations.filter { it.DESTI_SENTIT == line.destination }
+                                        else uiState.stations.filter { it.DESTI_SENTIT == line.origin }
+                                    } else {
+                                        if (uiState.direction.startsWith(line.origin)) uiState.stations
+                                        else uiState.stations.reversed()
+                                    }
 
-                            itemsIndexed(showStations) { index, station ->
-                                StationRow(
-                                    station = station,
-                                    isFirst = index == 0,
-                                    isLast = index == showStations.lastIndex,
+                                    item {
+                                        Text(
+                                            text = "Paradas",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.padding(bottom = 8.dp)
+                                        )
+                                    }
+                                    itemsIndexed(showStations) { index, station ->
+                                        StationItem(
+                                            station = station,
+                                            isFirst = index == 0,
+                                            isLast = index == showStations.lastIndex,
+                                            lineColor = parsedColor,
+                                            lineType = line.transport_type,
+                                            currentUserId = currentUserId,
+                                            onClick = { onStationClick(station) }
+                                        )
+                                    }
+                                }
+
+                            1 -> Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val showStations = if (transportType == TransportType.BUS) {
+                                    if (uiState.direction.startsWith(line.origin)) uiState.stations.filter { it.DESTI_SENTIT == line.destination }
+                                    else uiState.stations.filter { it.DESTI_SENTIT == line.origin }
+                                } else {
+                                    if (uiState.direction.startsWith(line.origin)) uiState.stations
+                                    else uiState.stations.reversed()
+                                }
+
+                                StationsMap(
+                                    stations = showStations,
                                     lineColor = parsedColor,
-                                    lineType = line.transport_type,
-                                    currentUserId = currentUserId,
-                                    onClick = { onStationClick(station) }
+                                    modifier = Modifier.fillMaxSize(),
+                                    onStationClick = { onStationClick(it) }
                                 )
                             }
                         }
+
                     }
                 }
             }

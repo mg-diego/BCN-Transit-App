@@ -21,7 +21,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.bcntransit.app.model.transport.AccessDto
-import com.bcntransit.app.screens.map.addMarker
 import com.bcntransit.app.screens.map.configureMapStyle
 import com.bcntransit.app.screens.map.getBitmapFromDrawable
 import com.bcntransit.app.screens.map.rememberMapViewWithLifecycle

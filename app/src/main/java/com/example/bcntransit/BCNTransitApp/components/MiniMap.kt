@@ -1,9 +1,5 @@
-package com.bcntransit.app.BCNTransitApp.Screens.map
+package com.bcntransit.app.BCNTransitApp.components
 
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Elevator
-import androidx.compose.material.icons.filled.Stairs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext

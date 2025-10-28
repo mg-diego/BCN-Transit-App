@@ -28,9 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.bcntransit.app.BCNTransitApp.Screens.map.FullScreenMap
-import com.bcntransit.app.BCNTransitApp.Screens.map.MiniMap
 import com.bcntransit.app.BCNTransitApp.Screens.search.routes.RouteCard
 import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
+import com.bcntransit.app.BCNTransitApp.components.MiniMap
 import com.bcntransit.app.R
 import com.bcntransit.app.api.ApiClient
 import com.bcntransit.app.api.ApiService

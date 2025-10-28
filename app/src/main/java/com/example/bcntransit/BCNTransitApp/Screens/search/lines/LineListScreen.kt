@@ -1,13 +1,10 @@
 package com.bcntransit.app.screens.search
 
 import android.annotation.SuppressLint
-import android.text.Html
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,16 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
 import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
 import com.bcntransit.app.api.ApiService
 import com.bcntransit.app.data.enums.TransportType
 import com.bcntransit.app.model.transport.LineDto
 import com.example.bcntransit.BCNTransitApp.components.CustomTopBar
-import com.bcntransit.app.R
-import com.example.bcntransit.BCNTransitApp.components.ExpandableItem
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)

@@ -5,9 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -31,7 +33,7 @@ import com.bcntransit.app.model.FavoriteDto
 import kotlinx.coroutines.launch
 
 @Composable
-fun StationRow(
+fun StationItem(
     station: StationDto,
     isFirst: Boolean,
     isLast: Boolean,
@@ -61,12 +63,12 @@ fun StationRow(
         }
     }
 
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(rowHeight)
             .clickable { onClick() }
+            .background(MaterialTheme.colorScheme.surface)
             .padding(end = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -168,6 +170,12 @@ fun StationRow(
                 )
             }
         }
+
+        Icon(
+            imageVector = Icons.Default.ChevronRight,
+            contentDescription = "Navegar",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

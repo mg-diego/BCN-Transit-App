@@ -282,14 +282,12 @@ fun RoutesScreen(
                         }
 
                         // CONEXIONES
-                        item { Row { Text("Enlaces", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) } }
                         if (connectionsState.loading) {
                             item { CircularProgressIndicator(modifier = Modifier.padding(16.dp), color = colorResource(R.color.medium_red)) }
                         } else if (connectionsState.error != null) {
                             item { InlineErrorBanner(connectionsState.error!!) }
-                        } else if (connectionsState.connections.isEmpty()) {
-                            item { Text("No hay enlaces disponibles.") }
-                        } else {
+                        } else if (connectionsState.connections.isNotEmpty()) {
+                            item { Row { Text("Enlaces", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) } }
                             items(connectionsState.connections) { connection ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     val context = LocalContext.current

@@ -1,23 +1,30 @@
 package com.bcntransit.app.screens.search
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bcntransit.app.BCNTransitApp.Screens.search.lines.BusLineCard
-import com.bcntransit.app.BCNTransitApp.components.CategoryCollapsable
+import com.bcntransit.app.BCNTransitApp.Screens.search.lines.BusLineItem
 import com.bcntransit.app.BCNTransitApp.components.InlineErrorBanner
 import com.bcntransit.app.R
 import com.bcntransit.app.api.ApiClient
@@ -41,6 +48,8 @@ fun BusLinesScreen(
     val context = LocalContext.current
 
     Scaffold(
+        // Usamos surface normal para que se funda con la lista
+        containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             CustomTopBar(
                 onBackClick = onBackClick,
@@ -60,46 +69,64 @@ fun BusLinesScreen(
                             painter = painterResource(drawableId),
                             contentDescription = null,
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(42.dp)
+                            modifier = Modifier.size(38.dp)
                         )
-                        Spacer(Modifier.width(16.dp))
-                        Text("Líneas", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            "Líneas de Bus",
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
                 }
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(vertical = 8.dp)
+                .padding(paddingValues)
         ) {
             when {
-                loadingLines -> item {
+                loadingLines -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = colorResource(R.color.medium_red))
                     }
                 }
 
-                errorLines != null -> item { InlineErrorBanner(errorLines!!) }
+                errorLines != null -> {
+                    InlineErrorBanner(errorLines!!)
+                }
 
                 else -> {
-                    val groupedByCategory = lines.groupBy { viewModel.mapToCustomCategory(it) }
-                    groupedByCategory.forEach { (category, linesInCategory) ->
-                        item {
-                            CategoryCollapsable(
-                                category = category,
-                                isExpanded = expandedStates[category] == true,
-                                onToggle = { viewModel.toggleCategory(category) }
-                            ) {
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    linesInCategory.forEach { line ->
-                                        BusLineCard(
-                                            line = line,
-                                            onClick = { onLineClick(line) },
-                                            drawableId = viewModel.mapLineToDrawableId(line, context)
-                                        )
+                    val groupedByCategory = remember(lines) {
+                        lines.groupBy { viewModel.mapToCustomCategory(it) }
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        groupedByCategory.forEach { (category, linesInCategory) ->
+                            // 1. Cabecera de Categoría (Estilo Flat)
+                            item {
+                                CategoryHeaderFlat(
+                                    title = category,
+                                    count = linesInCategory.size,
+                                    isExpanded = expandedStates[category] == true,
+                                    onToggle = { viewModel.toggleCategory(category) }
+                                )
+                            }
+
+                            // 2. Elementos de la lista
+                            if (expandedStates[category] == true) {
+                                item {
+                                    Column(modifier = Modifier.animateContentSize()) {
+                                        linesInCategory.forEach { line ->
+                                            BusLineItem(
+                                                line = line,
+                                                onClick = { onLineClick(line) },
+                                                drawableId = viewModel.mapLineToDrawableId(line, context)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -111,8 +138,48 @@ fun BusLinesScreen(
     }
 }
 
+// Componente visual para la cabecera de la categoría
+// Estilo: Fondo gris suave, texto en negrita, flecha a la derecha
+@Composable
+fun CategoryHeaderFlat(
+    title: String,
+    count: Int,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f), // Gris suave
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggle() }
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "$title ($count)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
 
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (isExpanded) "Colapsar" else "Expandir",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    // Divisor fino para separar cabecera de items
+    HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+}
 
+// ... BusLineItem function goes here (código de arriba) ...
+
+// ... ViewModelFactory ...
 class BusLinesViewModelFactory(
     private val apiService: ApiService
 ) : ViewModelProvider.Factory {

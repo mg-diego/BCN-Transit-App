@@ -1,9 +1,14 @@
 package com.bcntransit.app.screens.search
 
+import AlertsContent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import com.bcntransit.app.BCNTransitApp.components.SegmentedSelector
 import androidx.compose.runtime.*
@@ -24,6 +29,8 @@ import com.bcntransit.app.data.enums.TransportType
 import com.bcntransit.app.util.getAndroidId
 import com.example.bcntransit.BCNTransitApp.components.CustomTopBar
 
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StationListScreen(
     lineCode: String,
@@ -45,6 +52,9 @@ fun StationListScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Lista", "Mapa")
+
+    var showAlertsSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     uiState.line?.let { line ->
         val parsedColor = Color(android.graphics.Color.parseColor(if (line.color.startsWith("#")) line.color else "#${line.color}"))
@@ -74,6 +84,37 @@ fun StationListScreen(
                             Text(line.description, style = MaterialTheme.typography.titleLarge)
                         }
                     },
+                    actions = {
+                        val hasAlerts = line.has_alerts && line.alerts.isNotEmpty()
+
+                        IconButton(onClick = { showAlertsSheet = true }) {
+                            if (hasAlerts) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge(
+                                            containerColor = colorResource(R.color.medium_red),
+                                            contentColor = Color.White
+                                        ) {
+                                            Text("${line.alerts.size}")
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Info,
+                                        contentDescription = "Ver incidencias",
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            } else {
+                                // Si no hay alertas, mostramos el icono más sutil
+                                Icon(
+                                    imageVector = Icons.Outlined.Info,
+                                    contentDescription = "Información del servicio",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
                 )
             }
         ) { paddingValues ->
@@ -187,6 +228,19 @@ fun StationListScreen(
 
                     }
                 }
+            }
+        }
+
+        // NUEVO: Implementación del BottomSheet de Incidencias
+        if (showAlertsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAlertsSheet = false },
+                sheetState = sheetState
+            ) {
+                AlertsContent(
+                    lineName = line.name,
+                    alerts = line.alerts
+                )
             }
         }
     }

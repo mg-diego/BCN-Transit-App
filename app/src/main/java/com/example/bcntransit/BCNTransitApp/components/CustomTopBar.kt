@@ -2,6 +2,7 @@ package com.example.bcntransit.BCNTransitApp.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope // <--- IMPORTANTE: Necesitas este import
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -28,7 +29,10 @@ fun CustomTopBar(
     title: @Composable () -> Unit,
     onBackClick: () -> Unit,
     showBackButton: Boolean = true,
-    height: Dp = 60.dp
+    height: Dp = 60.dp,
+    // 1. AÑADIMOS EL PARÁMETRO ACTIONS
+    // Por defecto es una lambda vacía {} para no romper otras pantallas que usen este componente
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
         modifier = Modifier
@@ -37,9 +41,12 @@ fun CustomTopBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
-            navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            // Opcional: define el color por defecto de tus acciones
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface
         ),
         title = {
+            // Mantenemos tu lógica actual de título + botón atrás personalizado
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxHeight()
@@ -64,6 +71,8 @@ fun CustomTopBar(
                 }
             }
         },
+        // 2. PASAMOS LAS ACCIONES AL COMPONENTE NATIVO
+        actions = actions,
         scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     )
 }

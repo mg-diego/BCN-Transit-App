@@ -1,5 +1,7 @@
 package com.bcntransit.app.model.transport
 
+import java.util.Locale
+
 data class LineDto(
     val id: String,
     val code: String,
@@ -21,18 +23,18 @@ data class AlertDto(
     val begin_date: String,
     val end_date: String?,
     val status: String?,
-    val cause: String,
+    val cause: String?,
     val publications: List<PublicationDto>,
     val affected_entities: List<AffectedEntityDto>
 )
 
 data class PublicationDto(
-    val headerCa: String,
-    val headerEn: String,
-    val headerEs: String,
-    val textCa: String,
-    val textEn: String,
-    val textEs: String
+    val headerCa: String?,
+    val headerEn: String?,
+    val headerEs: String?,
+    val textCa: String?,
+    val textEn: String?,
+    val textEs: String?
 )
 
 data class AffectedEntityDto(
@@ -45,3 +47,41 @@ data class AffectedEntityDto(
     val station_code: String?,
     val station_name: String?
 )
+
+fun PublicationDto.getLocalizedHeader(): String {
+    val language = Locale.getDefault().language
+
+    fun getHeader(lang: String): String? {
+        return when (lang) {
+            "es" -> headerEs
+            "en" -> headerEn
+            "ca" -> headerCa
+            else -> null
+        }
+    }
+
+    val target = getHeader(language)
+
+    return if (!target.isNullOrEmpty()) target
+    else if (!headerCa.isNullOrEmpty()) headerCa
+    else headerEs ?: ""
+}
+
+fun PublicationDto.getLocalizedBody(): String {
+    val language = Locale.getDefault().language
+
+    fun getText(lang: String): String? {
+        return when (lang) {
+            "es" -> textEs
+            "en" -> textEn
+            "ca" -> textCa
+            else -> null
+        }
+    }
+
+    val target = getText(language)
+
+    return if (!target.isNullOrEmpty()) target
+    else if (!textCa.isNullOrEmpty()) textCa
+    else textEs ?: ""
+}

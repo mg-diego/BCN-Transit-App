@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import org.maplibre.android.geometry.LatLngBounds
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -95,6 +96,26 @@ fun MapScreen(
     val selectedBicingStation by remember { viewModel::selectedBicingStation }
     val isLoadingNearbyStations by remember { viewModel::isLoadingNearbyStations }
     val isLoadingConnections by remember { viewModel::isLoadingConnections }
+
+    var initialUserZoomDone by remember { mutableStateOf(false) }
+
+    LaunchedEffect(userLocation) {
+        if (!initialUserZoomDone && userLocation != null) {
+            mapView.getMapAsync { map ->
+                userLocation?.let { latLng ->
+                    val cameraPosition = CameraPosition.Builder()
+                        .target(latLng)
+                        .zoom(15.0) // Zoom fijo inicial (puedes poner 16.0 si prefieres más cerca)
+                        .build()
+
+                    // Usamos animateCamera para que sea suave, o moveCamera para instantáneo
+                    map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
+
+                    initialUserZoomDone = true // Marcamos como hecho para que no moleste al mover el mapa
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         mapView.getMapAsync { map ->
@@ -446,8 +467,27 @@ fun MapScreen(
             }
 
             if (isLoadingNearbyStations) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = colorResource(R.color.medium_red))
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally, // Centra el texto respecto al círculo
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = colorResource(R.color.medium_red)
+                        )
+
+                        // Un pequeño espacio para que no estén pegados
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Cargando estaciones cercanas...",
+                            style = MaterialTheme.typography.bodyMedium, // O bodyLarge según prefieras
+                            color = Color.Gray // O usa el color de tu tema
+                        )
+                    }
                 }
             }
 

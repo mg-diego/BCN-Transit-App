@@ -5,8 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import org.maplibre.android.geometry.LatLngBounds
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -96,6 +94,7 @@ fun MapScreen(
     val selectedBicingStation by remember { viewModel::selectedBicingStation }
     val isLoadingNearbyStations by remember { viewModel::isLoadingNearbyStations }
     val isLoadingConnections by remember { viewModel::isLoadingConnections }
+    var isSearchActive by remember { mutableStateOf(false) }
 
     var initialUserZoomDone by remember { mutableStateOf(false) }
 
@@ -401,7 +400,8 @@ fun MapScreen(
                     SearchTopBar(
                         initialQuery = "",
                         onSearch = onViewStation,
-                        enabled = !isLoadingNearbyStations
+                        enabled = !isLoadingNearbyStations,
+                        onActiveChange = { active -> isSearchActive = active }
                     )
                 }
 
@@ -416,7 +416,7 @@ fun MapScreen(
                     "Bicing" to R.drawable.bicing
                 )
 
-                if (!isLoadingNearbyStations) {
+                if (!isLoadingNearbyStations && !isSearchActive) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -491,55 +491,46 @@ fun MapScreen(
                 }
             }
 
-            userLocation?.let { location ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp),
-                    contentAlignment = Alignment.BottomEnd
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        horizontalAlignment = Alignment.End
+            if (!isSearchActive) {
+                userLocation?.let { location ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(4.dp),
+                        contentAlignment = Alignment.BottomEnd
                     ) {
-                        CustomFloatingActionButton(
-                            onClick = {
-                                mapView.getMapAsync { map ->
-                                    userLocation?.let { latLng ->
-                                        val cameraPosition = CameraPosition.Builder()
-                                            .target(latLng)
-                                            .zoom(16.0)
-                                            .build()
-
-                                        val durationMs = 1000L
-
-                                        map.animateCamera(
-                                            CameraUpdateFactory.newCameraPosition(cameraPosition),
-                                            durationMs.toInt(),
-                                            null
-                                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            CustomFloatingActionButton(
+                                onClick = {
+                                    mapView.getMapAsync { map ->
+                                        userLocation?.let { latLng ->
+                                            val cameraPosition = CameraPosition.Builder()
+                                                .target(latLng)
+                                                .zoom(16.0)
+                                                .build()
+                                            map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000, null)
+                                        }
                                     }
-                                }
-                            },
-                            imageVector = Icons.Default.MyLocation,
-                            contentDescription = "Centrar en ubicación"
-                        )
+                                },
+                                imageVector = Icons.Default.MyLocation,
+                                contentDescription = "Centrar en ubicación"
+                            )
 
-                        CustomFloatingActionButton(
-                            onClick = {
-                                scope.launch {
-                                    drawerState.open()
-                                }
-                            },
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filtros adicionales"
-                        )
+                            CustomFloatingActionButton(
+                                onClick = { scope.launch { drawerState.open() } },
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filtros adicionales"
+                            )
 
-                        CustomFloatingActionButton(
-                            onClick = { viewModel.updateNearbyStations() },
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Actualizar"
-                        )
+                            CustomFloatingActionButton(
+                                onClick = { viewModel.updateNearbyStations() },
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Actualizar"
+                            )
+                        }
                     }
                 }
             }

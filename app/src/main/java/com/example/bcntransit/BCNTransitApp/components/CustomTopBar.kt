@@ -30,8 +30,6 @@ fun CustomTopBar(
     onBackClick: () -> Unit,
     showBackButton: Boolean = true,
     height: Dp = 60.dp,
-    // 1. AÑADIMOS EL PARÁMETRO ACTIONS
-    // Por defecto es una lambda vacía {} para no romper otras pantallas que usen este componente
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
@@ -42,11 +40,9 @@ fun CustomTopBar(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-            // Opcional: define el color por defecto de tus acciones
             actionIconContentColor = MaterialTheme.colorScheme.onSurface
         ),
         title = {
-            // Mantenemos tu lógica actual de título + botón atrás personalizado
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxHeight()

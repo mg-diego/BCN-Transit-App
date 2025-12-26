@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bcntransit.app.R
 import com.bcntransit.app.util.getAndroidId
 import com.example.bcntransit.BCNTransitApp.Screens.settings.SettingsViewModel
 import com.example.bcntransit.BCNTransitApp.Screens.settings.SettingsViewModelFactory
@@ -69,7 +71,7 @@ fun SettingsScreen(
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                // Sección: Preferencias
+                /*// Sección: Preferencias
                 SectionHeader("⚙️ PREFERENCIAS")
 
                 SettingsSwitchItem(
@@ -79,7 +81,7 @@ fun SettingsScreen(
                     onCheckedChange = { viewModel.toggleDarkTheme(it) }
                 )
 
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))*/
 
                 // Sección: Información
                 SectionHeader("ℹ️ INFORMACIÓN")
@@ -158,7 +160,7 @@ fun SectionHeader(text: String) {
         text = text,
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
+        color = colorResource(R.color.medium_red),
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
     )
 }

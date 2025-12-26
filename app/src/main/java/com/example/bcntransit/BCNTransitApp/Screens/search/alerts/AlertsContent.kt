@@ -18,7 +18,6 @@ import com.example.bcntransit.BCNTransitApp.Screens.search.alerts.AlertCard
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AlertsContent(
-    lineName: String,
     alerts: List<AlertDto>
 ) {
     Column(
@@ -28,7 +27,7 @@ fun AlertsContent(
             .padding(bottom = 48.dp)
     ) {
         Text(
-            text = "Estado del servicio: $lineName",
+            text = "Estado del servicio:",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )

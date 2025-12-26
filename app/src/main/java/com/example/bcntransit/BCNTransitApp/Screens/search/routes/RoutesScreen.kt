@@ -149,6 +149,7 @@ fun RoutesScreen(
                                         )
                                         val alertText = if (selectedStation!!.has_alerts) "Incidencias" else "Servicio normal"
                                         val alertColor = if (selectedStation!!.has_alerts) colorResource(R.color.red) else colorResource(R.color.dark_green)
+
                                         Box(
                                             modifier = Modifier
                                                 .size(10.dp)

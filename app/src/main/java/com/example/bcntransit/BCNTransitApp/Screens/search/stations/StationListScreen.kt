@@ -125,7 +125,6 @@ fun StationListScreen(
                     .background(MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 // AÑADIR DOS TABS: LISTA y MAPA
-                // el SegmentedSelector se ve en ambas tabs, el itemsIndexed por ahora solo en LISTA, en MAPA deja un placeholder
                 Column {
                     if (line.origin.isNotEmpty() && line.destination.isNotEmpty()) {
                         Row(
@@ -238,7 +237,6 @@ fun StationListScreen(
                 sheetState = sheetState
             ) {
                 AlertsContent(
-                    lineName = line.name,
                     alerts = line.alerts
                 )
             }

@@ -33,11 +33,11 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 
-// --- CONSTANTES DE DISEÑO ---
-private const val ICON_SIZE = 64         // Lienzo total
-private const val STATION_RADIUS = 16f   // Radio del círculo de la estación (un poco más pequeño para que quepa todo)
-private const val ALERT_RADIUS = 14f     // Radio del círculo rojo de alerta
-private const val BORDER_WIDTH = 4f      // Borde blanco para contraste
+// --- CONSTANTES ---
+private const val ICON_SIZE = 64
+private const val STATION_RADIUS = 16f
+private const val ALERT_RADIUS = 12f
+private const val BORDER_WIDTH = 3f
 
 @Composable
 fun StationsMap(
@@ -48,7 +48,6 @@ fun StationsMap(
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle(context)
-
     var currentSymbolManager by remember { mutableStateOf<SymbolManager?>(null) }
 
     val stationsKey = remember(stations) {
@@ -65,13 +64,13 @@ fun StationsMap(
     LaunchedEffect(stationsKey, lineColor) {
         mapView.getMapAsync { map ->
             map.getStyle { style ->
-                // 1. LIMPIEZA PREVIA
+                // 1. Limpieza
                 currentSymbolManager?.deleteAll()
                 currentSymbolManager = null
                 style.getLayer("route-layer")?.let { style.removeLayer(it) }
                 style.getSource("route-source")?.let { style.removeSource(it) }
 
-                // 2. AÑADIR LA LÍNEA PRIMERO (Para que quede al fondo)
+                // 2. Línea (Fondo)
                 if (stations.size > 1) {
                     val points = stations.map { Point.fromLngLat(it.longitude, it.latitude) }
                     val lineSource = GeoJsonSource(
@@ -84,11 +83,10 @@ fun StationsMap(
                         lineColor(lineColor.toArgb()),
                         lineWidth(3f)
                     )
-                    // Al añadirla ahora, se dibuja antes que los símbolos que vendrán después.
                     style.addLayer(lineLayer)
                 }
 
-                // 3. INICIALIZAR SYMBOL MANAGER (Sus capas se pondrán automáticamente ENCIMA de la línea)
+                // 3. Symbol Manager
                 val symbolManager = SymbolManager(mapView, map, style).apply {
                     iconAllowOverlap = true
                     textAllowOverlap = false
@@ -104,12 +102,11 @@ fun StationsMap(
                     true
                 }
 
-                // --- PREPARACIÓN DE ICONOS ---
-                val centerX = ICON_SIZE / 2f
-                // Movemos el centro de la estación hacia abajo en el lienzo (aprox al 70% de la altura)
-                val stationCenterY = ICON_SIZE * 0.7f
+                // --- GENERACIÓN DE ICONOS ---
+                // El centro es siempre el mismo para ambos casos (32, 32)
+                val center = ICON_SIZE / 2f
 
-                // Icono Normal
+                // A) Icono Normal
                 val iconNormalName = "station-circle-${lineColor.toArgb()}"
                 if (style.getImage(iconNormalName) == null) {
                     val bitmap = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888)
@@ -117,55 +114,52 @@ fun StationsMap(
                     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
                     paint.color = lineColor.toArgb()
                     paint.style = Paint.Style.FILL
-                    // Dibujamos el círculo desplazado hacia abajo
-                    canvas.drawCircle(centerX, stationCenterY, STATION_RADIUS, paint)
+
+                    // Dibujamos en el centro absoluto
+                    canvas.drawCircle(center, center, STATION_RADIUS, paint)
                     style.addImage(iconNormalName, bitmap)
                 }
 
-                // Icono con ALERTA (Diseño Vertical / Piruleta)
+                // B) Icono Warning (REEMPLAZO)
                 val iconWarningName = "station-warning-${lineColor.toArgb()}"
                 if (style.getImage(iconWarningName) == null) {
                     val bitmap = Bitmap.createBitmap(ICON_SIZE, ICON_SIZE, Bitmap.Config.ARGB_8888)
                     val canvas = Canvas(bitmap)
 
-                    // a) Círculo de la Estación (Base - Abajo)
+                    // 1. Estación Base (IGUAL que el normal: Centro absoluto)
                     val paintBase = Paint(Paint.ANTI_ALIAS_FLAG)
                     paintBase.color = lineColor.toArgb()
                     paintBase.style = Paint.Style.FILL
-                    canvas.drawCircle(centerX, stationCenterY, STATION_RADIUS, paintBase)
+                    canvas.drawCircle(center, center, STATION_RADIUS, paintBase)
 
-                    // --- CÁLCULO DE POSICIÓN DEL BADGE (ARRIBA) ---
-                    val badgeCx = centerX // Centrado horizontalmente con la estación
-                    // Calculamos la Y para que se pose justo encima de la estación, con un ligero solapamiento visual (+2f)
-                    val stationTopEdge = stationCenterY - STATION_RADIUS
-                    val badgeCy = stationTopEdge - ALERT_RADIUS + 2f
+                    // 2. Badge de Alerta (Superpuesto en la esquina superior derecha)
+                    val badgeCx = center + (STATION_RADIUS * 0.7f)
+                    val badgeCy = center - (STATION_RADIUS * 0.7f)
 
-                    // b) Borde Blanco del Badge (Para contraste máximo)
+                    // Borde Blanco
                     val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG)
                     borderPaint.color = android.graphics.Color.WHITE
                     borderPaint.style = Paint.Style.FILL
                     canvas.drawCircle(badgeCx, badgeCy, ALERT_RADIUS + BORDER_WIDTH, borderPaint)
 
-                    // c) Círculo Rojo del Badge
+                    // Círculo Rojo
                     val badgePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-                    badgePaint.color = android.graphics.Color.RED // Rojo intenso
+                    badgePaint.color = android.graphics.Color.RED
                     badgePaint.style = Paint.Style.FILL
                     canvas.drawCircle(badgeCx, badgeCy, ALERT_RADIUS, badgePaint)
 
-                    // d) Signo de Exclamación (!)
+                    // Signo "!"
                     val textPaint = Paint(Paint.ANTI_ALIAS_FLAG)
                     textPaint.color = android.graphics.Color.WHITE
-                    textPaint.textSize = ALERT_RADIUS * 1.5f // Texto grande y legible
+                    textPaint.textSize = ALERT_RADIUS * 1.5f
                     textPaint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
                     textPaint.textAlign = Paint.Align.CENTER
-                    // Centrado vertical del texto
                     val textY = badgeCy - ((textPaint.descent() + textPaint.ascent()) / 2)
                     canvas.drawText("!", badgeCx, textY, textPaint)
 
                     style.addImage(iconWarningName, bitmap)
                 }
 
-                // 4. CREAR SÍMBOLOS
                 stations.forEach { station ->
                     val iconToUse = if (station.has_alerts) iconWarningName else iconNormalName
 
@@ -175,8 +169,7 @@ fun StationsMap(
                             .withIconImage(iconToUse)
                             .withIconSize(1.0f)
                             .withTextField(station.name)
-                            // Ajustamos el offset del texto porque el icono ahora es más alto visualmente
-                            .withTextOffset(arrayOf(0f, 2.0f))
+                            .withTextOffset(arrayOf(0f, 1.2f)) // Texto debajo estándar
                             .withTextSize(12f)
                             .withTextColor("#000000")
                             .withTextHaloColor("#FFFFFF")
@@ -185,12 +178,11 @@ fun StationsMap(
                     )
                 }
 
-                // 5. CÁMARA
+                // 5. Cámara
                 if (stations.isNotEmpty()) {
                     val boundsBuilder = LatLngBounds.Builder()
                     stations.forEach { s -> boundsBuilder.include(LatLng(s.latitude, s.longitude)) }
                     val bounds = boundsBuilder.build()
-                    // Añadimos padding para que los iconos de alerta no se corten en los bordes
                     map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 150))
                 }
             }

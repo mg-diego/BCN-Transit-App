@@ -124,18 +124,25 @@ fun FavoritesScreen(
                                     coroutineScope.launch {
                                         try {
                                             loading = true
+
                                             val deleted = ApiClient.userApiService.deleteUserFavorite(
                                                 currentUserId,
                                                 fav.TYPE,
                                                 fav.STATION_CODE
                                             )
+
                                             if (deleted) {
                                                 favorites = ApiClient.userApiService.getUserFavorites(currentUserId)
+                                                loading = false
                                                 snackbarHostState.showSnackbar("Favorito eliminado")
-                                            } else snackbarHostState.showSnackbar("Error al eliminar")
+                                            } else {
+                                                loading = false
+                                                snackbarHostState.showSnackbar("Error al eliminar")
+                                            }
                                         } catch (e: Exception) {
-                                            snackbarHostState.showSnackbar("Error al eliminar")
-                                        } finally { loading = false }
+                                            loading = false
+                                            snackbarHostState.showSnackbar("Error de conexión")
+                                        }
                                     }
                                 }
                             )

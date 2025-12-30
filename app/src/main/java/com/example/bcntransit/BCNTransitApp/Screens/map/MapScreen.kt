@@ -48,8 +48,15 @@ import org.maplibre.android.plugins.annotation.SymbolManager
 import org.maplibre.android.plugins.annotation.SymbolOptions
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.compose.material.icons.automirrored.filled.DirectionsBike
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.DirectionsBike
+import androidx.compose.material.icons.filled.LocalParking
+import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.text.font.FontWeight
 import androidx.core.content.ContextCompat
+import com.bcntransit.app.screens.search.AvailabilityCard
 import com.example.bcntransit.BCNTransitApp.components.CustomFloatingActionButton
 import com.example.bcntransit.BCNTransitApp.components.CustomSwitch
 
@@ -918,36 +925,76 @@ private fun BottomSheetContent(
 
             } else {
                 if (selectedNearbyStation.type == TransportType.BICING.type) {
+                    val slots = selectedBicingStation?.slots ?: 0
+                    val electrical = selectedBicingStation?.electrical_bikes ?: 0
+                    val mechanical = selectedBicingStation?.mechanical_bikes ?: 0
+                    val bikes = selectedBicingStation?.bikes ?: (electrical + mechanical)
+                    val totalCapacity = slots + bikes
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp) // Más espacio entre secciones
                     ) {
-                        Text(
-                            text = "Disponibilidad:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "   - Slots libres: ${selectedBicingStation?.slots}",
-                                style = MaterialTheme.typography.bodyMedium
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AvailabilityCard(
+                                modifier = Modifier.weight(1f),
+                                title = "Bicis",
+                                count = bikes,
+                                total = totalCapacity,
+                                icon = Icons.Default.DirectionsBike,
+                                color = colorResource(R.color.red)
+                            )
+
+                            // Tarjeta de ANCLAJES (Slots)
+                            AvailabilityCard(
+                                modifier = Modifier.weight(1f),
+                                title = "Anclajes",
+                                count = slots,
+                                total = totalCapacity,
+                                icon = Icons.Default.LocalParking,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "   - Bicis eléctricas: ${selectedBicingStation?.electrical_bikes}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                "   - Bicis mecánicas: ${selectedBicingStation?.mechanical_bikes}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+
+                        // 2. DESGLOSE (Eléctricas vs Mecánicas)
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    "Detalle de bicis",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // Eléctricas
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Bolt, contentDescription = null, tint = Color(0xFFFFC107)) // Amber
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Eléctricas", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                                    Text("$electrical", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                }
+
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth())
+
+                                // Mecánicas
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.PedalBike, contentDescription = null, tint = Color.Gray)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Mecánicas", modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                                    Text("$mechanical", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                }
+                            }
                         }
                     }
-
                 } else {
                     selectedNearbyStation.let { st ->
                         selectedStation?.let { station ->

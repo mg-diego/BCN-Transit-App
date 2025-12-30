@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences.core)
     implementation(libs.runtime)
     implementation(libs.androidx.compose.foundation.foundation2)
+    implementation(libs.androidx.compose.ui.text)
 
     // Compose BOM
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")

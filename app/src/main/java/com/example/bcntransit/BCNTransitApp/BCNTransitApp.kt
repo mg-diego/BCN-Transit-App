@@ -1,5 +1,7 @@
     package com.bcntransit.app
 
+    import android.os.Build
+    import androidx.annotation.RequiresApi
     import androidx.compose.foundation.layout.padding
     import androidx.compose.material3.Scaffold
     import androidx.compose.runtime.*
@@ -29,8 +31,9 @@
     import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.typeParam
     import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.lineCodeParam
     import com.bcntransit.app.BCNTransitApp.Screens.navigation.Screen.Favorites.stationCodeParam
+    import com.bcntransit.app.screens.PlaceholderScreen
+    import com.bcntransit.app.screens.search.BicingStationScreen
     import com.bcntransit.app.screens.search.StationListScreen
-    import com.bcntransit.app.screens.search.stations.BicingScreen
     import com.bcntransit.app.screens.settings.SettingsScreen
     import com.bcntransit.app.util.getAndroidId
     import com.bcntransit.app.widget.RegisterViewModel
@@ -38,6 +41,7 @@
     import com.example.bcntransit.BCNTransitApp.Screens.settings.PrivacyPolicyScreen
     import com.example.bcntransit.BCNTransitApp.Screens.settings.TermsAndConditionsScreen
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Composable
     fun BCNTransitApp() {
         val navController = rememberNavController()
@@ -158,9 +162,8 @@
                                     Screen.SearchLine.viewLine(typeArg, line.code)
                                 )
                             },
-                            onBackClick = { navController.popBackStack() } )
-                    } else if (transportType == TransportType.BICING) {
-                        BicingScreen()
+                            onBackClick = { navController.popBackStack() }
+                        )
                     } else {
                         LineListScreen(
                             transportType = transportType,
@@ -214,17 +217,25 @@
                     val stationCodeParam =
                         backStack.arguments?.getString(stationCodeParam) ?: return@composable
                     val transportType = TransportType.from(typeArg)
-                    RoutesScreen(
-                        stationCode = stationCodeParam,
-                        lineCode = lineCodeArg,
-                        apiService = ApiClient.from(transportType),
-                        onConnectionClick = { stationCode: String, lineCode: String ->
-                            navController.navigate(
-                                Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)
-                            )
-                        },
-                        onBackClick = { navController.popBackStack() }
-                    )
+                    if (typeArg == "bicing") {
+                        BicingStationScreen(
+                            stationId = stationCodeParam,
+                            bicingApiService = ApiClient.bicingApiService,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        RoutesScreen(
+                            stationCode = stationCodeParam,
+                            lineCode = lineCodeArg,
+                            apiService = ApiClient.from(transportType),
+                            onConnectionClick = { stationCode: String, lineCode: String ->
+                                navController.navigate(
+                                    Screen.SearchStation.viewRoutes(typeArg, lineCode, stationCode)
+                                )
+                            },
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    }
                 }
 
                 composable(Screen.Favorites.route) {

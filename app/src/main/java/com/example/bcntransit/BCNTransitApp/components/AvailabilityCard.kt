@@ -16,7 +16,6 @@ fun AvailabilityCard(
     modifier: Modifier = Modifier,
     title: String,
     count: Int,
-    total: Int,
     icon: ImageVector,
     color: Color
 ) {

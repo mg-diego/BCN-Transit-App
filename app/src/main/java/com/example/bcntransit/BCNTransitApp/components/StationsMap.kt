@@ -33,7 +33,6 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 
-// --- CONSTANTES ---
 private const val ICON_SIZE = 64
 private const val STATION_RADIUS = 16f
 private const val ALERT_RADIUS = 12f

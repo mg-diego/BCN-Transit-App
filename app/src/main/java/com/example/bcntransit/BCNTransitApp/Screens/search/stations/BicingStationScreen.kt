@@ -235,9 +235,8 @@ fun BicingStationScreen(
                                     modifier = Modifier.weight(1f),
                                     title = "Bicis",
                                     count = selectedStation.bikes,
-                                    total = selectedStation.slots + selectedStation.bikes, // Aprox capacidad total
                                     icon = Icons.Default.DirectionsBike,
-                                    color = colorResource(R.color.red) // Color corporativo Bicing aprox
+                                    color = colorResource(R.color.red)
                                 )
 
                                 // Tarjeta de SLOTS
@@ -245,7 +244,6 @@ fun BicingStationScreen(
                                     modifier = Modifier.weight(1f),
                                     title = "Anclajes",
                                     count = selectedStation.slots,
-                                    total = selectedStation.slots + selectedStation.bikes,
                                     icon = Icons.Default.LocalParking,
                                     color = MaterialTheme.colorScheme.primary
                                 )

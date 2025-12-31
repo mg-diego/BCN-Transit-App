@@ -21,7 +21,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         Log.d("FCM_SERVICE", "Data: ${message.data}")
         Log.d("FCM_SERVICE", "========================================")
 
-        // Muestra la notificación
         message.notification?.let {
             showNotification(it.title ?: "BCN Transit", it.body ?: "Nueva notificación")
         }
@@ -31,7 +30,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "bcn_transit_alerts"
 
-        // Crear canal de notificación (necesario para Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -43,7 +41,6 @@ class FirebaseMessagingService : FirebaseMessagingService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Crear la notificación
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle(title)
             .setContentText(body)

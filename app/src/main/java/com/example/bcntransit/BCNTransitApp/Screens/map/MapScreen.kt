@@ -131,7 +131,6 @@ fun MapScreen(
 
                 val station = stationInfo.station
 
-                // --- Restaurar el último marker si era distinto ---
                 viewModel.lastSelectedMarker?.let { last ->
                     if (last != marker) {
                         viewModel.getStationForMarker(last)?.let { prev ->
@@ -140,17 +139,14 @@ fun MapScreen(
                     }
                 }
 
-                // --- Seleccionar el nuevo marker y agrandarlo ---
                 viewModel.selectNearbyStation(
                     station,
                     ApiClient.from(TransportType.from(station.type))
                 )
 
-                // Solo cambiamos el icono, no creamos ni borramos marker
                 marker.setIcon(stationInfo.enlargedIcon)
                 viewModel.setLastSelectedMarker(marker)
 
-                // --- Animar la cámara ---
                 val cameraPosition = CameraPosition.Builder()
                     .target(marker.position.withOffset(-0.001))
                     .zoom(16.0)
@@ -186,7 +182,6 @@ fun MapScreen(
 
         mapView.getMapAsync { map ->
             map.getStyle { style ->
-                // Inicializa SymbolManager si aún no existe
                 if (viewModel.symbolManager == null) {
                     viewModel.symbolManager = SymbolManager(mapView, map, style).apply {
                         iconAllowOverlap = true
@@ -196,7 +191,6 @@ fun MapScreen(
 
                 val symbolManager = viewModel.symbolManager!!
 
-                // --- Eliminar markers/symbols que ya no cumplen filtros ---
                 viewModel.markerMap.keys
                     .filter { id ->
                         val station = nearbyStations.firstOrNull { it.station_code == id }
@@ -224,14 +218,13 @@ fun MapScreen(
                         viewModel.markerMap[id]?.remove()
                         viewModel.markerMap.remove(id)
 
-                        // Eliminar symbol de Bicing si existe
                         viewModel.symbolMap[id]?.let { symbol ->
                             symbolManager.delete(symbol)
                             viewModel.symbolMap.remove(id)
                         }
                     }
 
-                viewModel.symbolMap.keys.toList() // Copia la lista para evitar ConcurrentModificationException
+                viewModel.symbolMap.keys.toList()
                     .filter { id ->
                         val station = nearbyStations.firstOrNull { it.station_code == id }
                         station == null || run {
@@ -261,7 +254,6 @@ fun MapScreen(
                         }
                     }
 
-                // --- Añadir/actualizar markers/symbols que cumplen filtros ---
                 nearbyStations
                     .filter { station ->
                         val matchesType = selectedFilters.any { filter ->
@@ -287,24 +279,20 @@ fun MapScreen(
                         val sizePx = getMarkerSize(station.type)
 
                         if (station.type == TransportType.BICING.type) {
-                            // === BICING: Usar SymbolLayer ===
                             val existing = viewModel.symbolMap[station.station_code]
 
-                            // Calcular los valores SIEMPRE
                             val elec = station.electrical ?: 0
                             val mech = station.mechanical ?: 0
                             val slots = station.slots ?: 0
-                            val displayText = "Slots: $slots\nB. Eléctricas: $elec \nB. Mecánicas: $mech"
+                            val displayText = "Anclajes: $slots\nB. Eléctricas: $elec \nB. Mecánicas: $mech"
 
                             if (existing == null) {
-                                // Añadir icono al style si no existe
                                 val iconName = "bicing-icon"
                                 if (style.getImage(iconName) == null) {
                                     val bitmap = getBitmapFromDrawable(context, drawableId, sizePx)
                                     style.addImage(iconName, bitmap)
                                 }
 
-                                // Crear symbol con texto permanente
                                 val symbolOptions = SymbolOptions()
                                     .withLatLng(LatLng(station.coordinates[0], station.coordinates[1]))
                                     .withIconImage(iconName)
@@ -320,12 +308,10 @@ fun MapScreen(
                                 val symbol = symbolManager.create(symbolOptions)
                                 viewModel.symbolMap[station.station_code] = symbol
                             } else {
-                                // IMPORTANTE: Actualizar con los 3 valores
                                 existing.textField = displayText
                                 symbolManager.update(existing)
                             }
 
-                            // Click listener para symbols de Bicing
                             symbolManager.addClickListener { symbol ->
                                 val stationCode = viewModel.symbolMap.entries
                                     .firstOrNull { it.value == symbol }?.key
@@ -340,7 +326,6 @@ fun MapScreen(
                                             ApiClient.from(TransportType.BICING)
                                         )
 
-                                        // Animar cámara
                                         val cameraPosition = CameraPosition.Builder()
                                             .target(LatLng(it.coordinates[0], it.coordinates[1]))
                                             .zoom(16.0)
@@ -359,7 +344,6 @@ fun MapScreen(
                             }
 
                         } else {
-                            // === OTROS TRANSPORTES: Usar Markers normales ===
                             val existing = viewModel.markerMap[station.station_code]
                             val normalIcon = getMarkerIcon(context, drawableId, sizePx)
 
@@ -456,9 +440,9 @@ fun MapScreen(
                                 ),
                                 border = FilterChipDefaults.filterChipBorder(
                                     borderColor = if (selectedFilters.contains(filter))
-                                        MaterialTheme.colorScheme.primary   // borde visible solo si está seleccionado
+                                        MaterialTheme.colorScheme.primary
                                     else
-                                        Color.Transparent,                  // sin borde si no lo está
+                                        Color.Transparent,
                                     selectedBorderColor = MaterialTheme.colorScheme.primary,
                                     disabledBorderColor = Color.Transparent,
                                     borderWidth = 1.dp,
@@ -479,20 +463,19 @@ fun MapScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally, // Centra el texto respecto al círculo
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         CircularProgressIndicator(
                             color = colorResource(R.color.medium_red)
                         )
 
-                        // Un pequeño espacio para que no estén pegados
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Text(
                             text = "Cargando estaciones cercanas...",
-                            style = MaterialTheme.typography.bodyMedium, // O bodyLarge según prefieras
-                            color = Color.Gray // O usa el color de tu tema
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
                         )
                     }
                 }
@@ -708,7 +691,6 @@ fun BicingAvailabilityFilters(
 ) {
     var localSlots by remember { mutableStateOf(onlySlotsAvailable) }
 
-    // Estado del tipo de bici: "any", "electrical", "mechanical", "none"
     var localBikeFilter by remember {
         mutableStateOf(
             when {
@@ -720,7 +702,6 @@ fun BicingAvailabilityFilters(
         )
     }
 
-    // Sincronizar cambios externos
     LaunchedEffect(onlySlotsAvailable, onlyElectricalBikesAvailable, onlyMechanicalBikesAvailable) {
         localSlots = onlySlotsAvailable
         localBikeFilter = when {
@@ -738,7 +719,6 @@ fun BicingAvailabilityFilters(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // --- Solo slots libres ---
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -755,7 +735,6 @@ fun BicingAvailabilityFilters(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // --- Solo bicis disponibles ---
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -777,7 +756,6 @@ fun BicingAvailabilityFilters(
             )
         }
 
-        // --- RadioGroup: tipo de bici ---
         if (localBikeFilter != "none") {
             Spacer(modifier = Modifier.height(8.dp))
             val options = listOf(
@@ -788,12 +766,12 @@ fun BicingAvailabilityFilters(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp) // espacio uniforme entre filas
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 options.forEach { (value, label) ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth() // ocupa ancho pero no fuerza separación
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         RadioButton(
                             selected = localBikeFilter == value,
@@ -840,9 +818,9 @@ fun DistanceSlider(
             steps = steps,
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(
-                thumbColor = colorResource(R.color.medium_red).copy(alpha = 1f),      // color del circulito
-                activeTrackColor = colorResource(R.color.medium_red), // color de la parte activa de la barra
-                inactiveTrackColor = colorResource(R.color.gray).copy(alpha = 0.3f) // parte inactiva
+                thumbColor = colorResource(R.color.medium_red).copy(alpha = 1f),
+                activeTrackColor = colorResource(R.color.medium_red),
+                inactiveTrackColor = colorResource(R.color.gray).copy(alpha = 0.3f)
             )
         )
 
@@ -929,7 +907,6 @@ private fun BottomSheetContent(
                     val electrical = selectedBicingStation?.electrical_bikes ?: 0
                     val mechanical = selectedBicingStation?.mechanical_bikes ?: 0
                     val bikes = selectedBicingStation?.bikes ?: (electrical + mechanical)
-                    val totalCapacity = slots + bikes
 
                     Column(
                         modifier = Modifier
@@ -945,23 +922,19 @@ private fun BottomSheetContent(
                                 modifier = Modifier.weight(1f),
                                 title = "Bicis",
                                 count = bikes,
-                                total = totalCapacity,
                                 icon = Icons.Default.DirectionsBike,
                                 color = colorResource(R.color.red)
                             )
 
-                            // Tarjeta de ANCLAJES (Slots)
                             AvailabilityCard(
                                 modifier = Modifier.weight(1f),
                                 title = "Anclajes",
                                 count = slots,
-                                total = totalCapacity,
                                 icon = Icons.Default.LocalParking,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
 
-                        // 2. DESGLOSE (Eléctricas vs Mecánicas)
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f)),
                             modifier = Modifier.fillMaxWidth()

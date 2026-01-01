@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BCN Transit</string>
+    <string name="widget_bcn_transit_description">"         Displays one of your favorite stations, including the line, direction, and upcoming trains.     "</string>
+    <string name="terms_title">Terms and Conditions</string>
+    <string name="back">Back</string>
+
+    <string name="terms_header">Application Terms of Use</string>
+    <string name="terms_intro">
+    By using this application, you accept the following terms and conditions.
+    Please read them carefully before continuing.
+</string>
+
+    <string name="terms_section1_title">1. Permitted Use</string>
+    <string name="terms_section1_text">
+    This application is intended exclusively for personal and informational use.
+    Modifying, distributing, or using its content for commercial purposes without
+    prior authorization is prohibited.
+</string>
+
+    <string name="terms_section2_title">2. Liability</string>
+    <string name="terms_section2_text">
+    The developer is not liable for damages or losses resulting from the use
+    or misuse of the application, nor guarantees continuous service availability.
+</string>
+
+    <string name="terms_last_update">Last updated: October 2025</string>
+    <string name="metro">The Barcelona Metro opens every day at 5:00 AM. Service end times vary depending on the type of day.\n\n
+        Weekdays (Monday to Thursday): until midnight.\n
+        Fridays and eves of public holidays: until 2:00 AM.\n
+        Saturdays: continuous service all night.\n
+        Sundays and mid-week public holidays: until midnight.
+    </string>
+</resources>

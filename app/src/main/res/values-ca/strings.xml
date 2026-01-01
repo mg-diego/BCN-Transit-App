@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BCN Transit</string>
+    <string name="widget_bcn_transit_description">"         Mostra una de les teves estacions preferides, incloent-hi la línia, la direcció i els pròxims trens.     "</string>
+    <string name="terms_title">Termes i Condicions</string>
+    <string name="back">Enrere</string>
+
+    <string name="terms_header">Condicions d\'ús de l\'aplicació</string>
+    <string name="terms_intro">
+    En utilitzar aquesta aplicació, acceptes els següents termes i condicions.
+    Si us plau, llegeix-los detingudament abans de continuar.
+</string>
+
+    <string name="terms_section1_title">1. Ús permès</string>
+    <string name="terms_section1_text">
+    Aquesta aplicació està destinada exclusivament a un ús personal i informatiu.
+    No està permès modificar, distribuir o utilitzar el seu contingut amb finalitats comercials
+    sense autorització prèvia.
+</string>
+
+    <string name="terms_section2_title">2. Responsabilitat</string>
+    <string name="terms_section2_text">
+    El desenvolupador no es fa responsable de danys o pèrdues derivats de l\'ús
+    o mal ús de l\'aplicació, ni garanteix la disponibilitat contínua del servei.
+</string>
+
+    <string name="terms_last_update">Última actualització: Octubre de 2025</string>
+    <string name="metro">El metro de Barcelona obre cada dia a les 5 del matí. Les hores de finalització del servei varien en funció del tipus de dia.\n\n
+        Feiners (de dilluns a dijous): fins a les 24.00 h.\n
+        Divendres i vigílies de festiu: fins a les 2.00 h.\n
+        Dissabtes: servei continu tota la nit.\n
+        Diumenges i festius entre setmana: fins a les 24.00 h.
+    </string>
+</resources>

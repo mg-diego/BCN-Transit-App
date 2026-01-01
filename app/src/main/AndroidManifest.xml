@@ -2,13 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permisos de red y ubicación -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Declarar que la app puede usar GPS pero no es obligatorio -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
@@ -20,7 +18,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BCNTransit"
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:localeConfig="@xml/locales_config">
 
         <activity
             android:name=".MainActivity"
@@ -36,8 +35,11 @@
 
         <activity
             android:name=".WidgetConfigurationActivity"
-            android:exported="false"
-            android:theme="@style/Theme.BCNTransit">
+            android:exported="true"
+            android:theme="@style/Theme.BCNTransit"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
@@ -57,7 +59,6 @@
             android:name=".widget.RoutesWidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
-        <!-- AGREGA ESTO AL FINAL, ANTES DE </application> -->
         <service
             android:name=".FirebaseMessagingService"
             android:exported="false">
